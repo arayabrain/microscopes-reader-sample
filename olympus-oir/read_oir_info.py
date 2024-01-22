@@ -1,4 +1,5 @@
 import ctypes as ct
+import json
 import sys
 
 from area_image_size import AreaImageSize
@@ -7,7 +8,7 @@ from channel_info import ChannelInfo
 from file_creation_time import FileCreationTime
 from h_ida import CMN_RECT, IDA_OpenMode, IDA_Result
 from lib import ida
-from objective_len_info import ObjectiveLensInfo
+from objective_lens_info import ObjectiveLensInfo
 from pixel_length import PixelLength
 from system_info import SystemInfo
 from user_comment import UserComment
@@ -119,6 +120,46 @@ def main(filepath):
         Tstep = axis.get_step()
     nTLoop = nTLoop or 1
     print(nLLoop, nTLoop, nZLoop)
+
+    # ====================
+    # Output
+    # ====================
+
+    result_data = {
+        "uiWidth": rect.width,
+        "uiHeight": rect.height,
+        "Loops": nTLoop,
+        "ZSlicenum": nZLoop,
+        "nChannel": channel_info.get_num_of_channel(),
+        "PixelLengthX": pixel_length.get_pixel_length_x(),
+        "PixelLengthY": pixel_length.get_pixel_length_y(),
+        "ZInterval": Zstep,
+        "TInterval": Tstep,
+        "ZStart": Zstart,
+        "ZEnd": Zend,
+        "ObjectiveName": "",  # TODO: need to convert to str.
+        # "ObjectiveName": # objective_lens_info.get_name_tm(hAccessor, hArea),
+        "ObjectiveMag": objective_lens_info.get_magnification_tm(),
+        "ObjectiveNA": objective_lens_info.get_na_tm(),
+        "ReflectiveIndex": objective_lens_info.get_reflective_index_tm(),
+        "Immersion": "",  # TODO: need to convert to str.
+        # "Immersion": objective_lens_info.get_immersion_tm(),
+        "Date": "",  # TODO: need to convert to str.
+        # "Date": file_creation_time.get_file_creation_time_tm(hAccessor, hArea),
+        "NumberOfGroup": num_of_group.value,
+        "NumberOfLevel": num_of_layer.value,
+        "NumberOfArea": num_of_area.value,
+        "ByteDepthCh0": "",  # TODO: Need to resolve get_depth_of_ch0_tm() error.
+        # "ByteDepthCh0": channel_info.get_depth_of_ch0_tm(),
+        "SystemName": system_info.m_szSystemName,
+        "SystemVersion": system_info.m_szSystemVersion,
+        "DeviceName": system_info.m_szDeviceName,
+        "UserName": system_info.m_szUserName,
+        "CommentByUser": user_comment.m_szComment,
+    }
+
+    print("------------ result_data:")
+    print(json.dumps(result_data, indent=2))
 
 
 if __name__ == "__main__":

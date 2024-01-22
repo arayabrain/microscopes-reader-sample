@@ -83,4 +83,4 @@ class ObjectiveLensInfo:
         return self.m_dWD
 
     def get_reflective_index_tm(self):
-        return self.mm_dReflectiveIndex
+        return self.m_dReflectiveIndex

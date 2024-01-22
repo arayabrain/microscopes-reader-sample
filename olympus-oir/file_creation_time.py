@@ -21,6 +21,6 @@ class FileCreationTime:
         print(f"\tTime={self.m_szCreationTime}")
 
     def get_file_creation_time_tm(self, hAccessor, hArea):
-        result, hProp = lib.get_area_property(hAcessor, hArea, "CreationDateTime")
-        result, pCreationDateTime = lib.get_property_value(HAccessor, hProp, "dateTime")
+        result, hProp = lib.get_area_property(hAccessor, hArea, "CreationDateTime")
+        result, pCreationDateTime = lib.get_property_value(hAccessor, hProp, "dateTime")
         return pCreationDateTime
