@@ -1,6 +1,9 @@
 import ctypes as ct
 import sys
 
+import os
+import numpy as np
+
 from area_image_size import AreaImageSize
 from axis_info import AxisInfo
 from channel_info import ChannelInfo
@@ -92,6 +95,13 @@ def main(filepath):
 
     m_pucImageBuffer = None
 
+    # Specify channel number
+    # TODO: Finally, channel_no shall be externally specifiable.
+    channel_no = 0
+
+    # Variable for storing results (image stack)
+    result_stack = []
+
     # Retrieve Image data and TimeStamp frame-by-frame
     for i in range(nLLoop):
         for j in range(nZLoop):
@@ -107,15 +117,42 @@ def main(filepath):
                 # Get Image Body
                 m_pucImageBuffer = frame_manager.get_image_body(rect)
 
-                # Store Image Data Pixel by Pixel
-                frame_manager.pucBuffer_to_WORD_TM()
-                for nDataCnt in range(rect.width * rect.height):
-                    result = frame_manager.get_pixel_value_tm(nDataCnt)
-                    result += 1
+                # NOTE: Since there are concerns about the efficiency of this process
+                #       (acquiring pixel data one dot at a time), 
+                #       another process (using ndarray) is used.
+                # # Store Image Data Pixel by Pixel
+                # frame_manager.pucBuffer_to_WORD_TM()
+                # for nDataCnt in range(rect.width * rect.height):
+                #     result = frame_manager.get_pixel_value_tm(nDataCnt)
+                #     result += 1
+
+                # Obtain image data in ndarray format
+                pucBuffer_to_WORD_TM = frame_manager.pucBuffer_to_WORD_TM()
+                pucBuffer_ndarray = np.ctypeslib.as_array(pucBuffer_to_WORD_TM)
+                result_stack.append(pucBuffer_ndarray)
+
                 frame_manager.release_image_body()
 
                 frame_manager.get_frame_position()
                 frame_manager.write_frame_position()
+
+    # ====================
+    # Output
+    # ====================
+
+    # Save image stack (tiff format)
+    from PIL import Image
+    save_stack = [Image.fromarray(frame) for frame in result_stack]
+    save_path = (
+        os.path.basename(filepath) + f".out.ch{channel_no}.tiff"
+    )
+    print(f"save image: {save_path}")
+    save_stack[0].save(
+        save_path,
+        compression="tiff_deflate",
+        save_all=True,
+        append_images=save_stack[1:],
+    )
 
     # ====================
     # Cleaning

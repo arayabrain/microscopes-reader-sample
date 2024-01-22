@@ -52,8 +52,15 @@ class FrameManager:
         return self.m_pucImageBuffer_asWORD[myDataCnt]
 
     def pucBuffer_to_WORD_TM(self):
-        self.m_pucImageBuffer_asWORD = cast(self.m_pucImageBuffer, POINTER(c_uint16))
+        # TODO: The width and height should be obtained externally as appropriate.
+        #   (If it is difficult to obtain them here, they should be obtained elsewhere.)
+        buffer_size = c_uint16 * 512 * 512
 
+        self.m_pucImageBuffer_asWORD = buffer_size.from_buffer(
+            self.m_pucImageBuffer
+        )
+
+        return self.m_pucImageBuffer_asWORD
     def get_frame_index(self):
         pFrameAxes = lib.get_image_axis(self.m_hAccessor, self.m_hImage)
         for f in pFrameAxes:
