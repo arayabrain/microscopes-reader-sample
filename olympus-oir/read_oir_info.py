@@ -1,5 +1,6 @@
 import ctypes as ct
 import json
+import os
 import sys
 
 from area_image_size import AreaImageSize
@@ -160,6 +161,9 @@ def main(filepath):
 
     print("------------ result_data:")
     print(json.dumps(result_data, indent=2))
+    save_path = os.path.basename(filepath) + f".out.metadata.json"
+    with open(save_path, "w") as f:
+        json.dump(result_data, f, indent=2)
 
     # ====================
     # Cleaning
