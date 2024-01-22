@@ -161,6 +161,27 @@ def main(filepath):
     print("------------ result_data:")
     print(json.dumps(result_data, indent=2))
 
+    # ====================
+    # Cleaning
+    # ====================
+    # Area
+    ida.ReleaseArea(hAccessor, hArea)
+
+    # Group
+    ida.ReleaseGroup(hAccessor, hGroup)
+
+    # File
+    ida.Close(hAccessor, hFile)
+
+    # Disconnect
+    ida.Disconnect(hAccessor)
+
+    # ReleaseAccessor
+    ida.ReleaseAccessor(hAccessor)
+
+    # Terminate
+    ida.Terminate()
+
 
 if __name__ == "__main__":
     filepath = sys.argv[1]
