@@ -1,19 +1,14 @@
-import sys
 import ctypes as ct
+import sys
 
-from lib import ida
-from h_ida import (
-    IDA_Result,
-    IDA_OpenMode,
-
-    CMN_RECT,
-)
-from channel_info import ChannelInfo
 from area_image_size import AreaImageSize
 from axis_info import AxisInfo
-from pixel_length import PixelLength
-from objective_len_info import ObjectiveLensInfo
+from channel_info import ChannelInfo
 from file_creation_time import FileCreationTime
+from h_ida import CMN_RECT, IDA_OpenMode, IDA_Result
+from lib import ida
+from objective_len_info import ObjectiveLensInfo
+from pixel_length import PixelLength
 from system_info import SystemInfo
 from user_comment import UserComment
 
@@ -43,7 +38,7 @@ def main(filepath):
 
     # Get Group Handle
     hGroup = ct.c_void_p()
-    specify_group = 0 # OIR Data has only 1 group, omp2info file may have more groups
+    specify_group = 0  # OIR Data has only 1 group, omp2info file may have more groups
     ida.GetGroup(hAccessor, hFile, specify_group, ct.byref(hGroup))
 
     # GetNumberOfLevels
@@ -52,7 +47,7 @@ def main(filepath):
 
     # GetLevelImageSize
     rect = CMN_RECT()
-    specify_layer = 0 # OIR and omp2info file has only 1 layer
+    specify_layer = 0  # OIR and omp2info file has only 1 layer
     ida.GetLevelImageSize(hAccessor, hGroup, specify_layer, ct.byref(rect))
     layer_width = rect.width
     layer_height = rect.height
@@ -101,7 +96,6 @@ def main(filepath):
     user_comment = UserComment(hAccessor, hArea)
     user_comment.print()
 
-
     # ====================
     # Something here
     # ====================
@@ -127,6 +121,6 @@ def main(filepath):
     print(nLLoop, nTLoop, nZLoop)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     filepath = sys.argv[1]
     main(filepath)
