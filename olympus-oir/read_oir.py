@@ -1,20 +1,13 @@
-import sys
 import ctypes as ct
+import sys
 
-from lib import ida
-from h_ida import (
-    IDA_Result,
-    IDA_OpenMode,
-    IDA_AXIS_INFO,
-    IDA_AxisType,
-
-    CMN_RECT,
-)
-from channel_info import ChannelInfo
 from area_image_size import AreaImageSize
 from axis_info import AxisInfo
-from roi_collection import RoiCollection
+from channel_info import ChannelInfo
 from frame_manager import FrameManager
+from h_ida import CMN_RECT, IDA_AXIS_INFO, IDA_AxisType, IDA_OpenMode, IDA_Result
+from lib import ida
+from roi_collection import RoiCollection
 
 
 def main(filepath):
@@ -42,12 +35,12 @@ def main(filepath):
 
     # Get Group Handle
     hGroup = ct.c_void_p()
-    specify_group = 0 # OIR Data has only 1 group, omp2info file may have more groups
+    specify_group = 0  # OIR Data has only 1 group, omp2info file may have more groups
     ida.GetGroup(hAccessor, hFile, specify_group, ct.byref(hGroup))
 
     # GetLevelImageSize
     rect = CMN_RECT()
-    specify_layer = 0 # OIR and omp2info file has only 1 layer
+    specify_layer = 0  # OIR and omp2info file has only 1 layer
     ida.GetLevelImageSize(hAccessor, hGroup, specify_layer, ct.byref(rect))
     layer_width = rect.width
     layer_height = rect.height
@@ -89,7 +82,7 @@ def main(filepath):
     nZLoop = nZLoop or 1
 
     # Prepare mex matrices
-    # TODO: 
+    # TODO:
 
     # Retrieve all imaged area
     rect.width = area_image_size.get_x()
@@ -103,10 +96,14 @@ def main(filepath):
     for i in range(nLLoop):
         for j in range(nZLoop):
             for k in range(nTLoop):
-                nAxisCount = set_frame_axis_index(i, j, k, imaging_roi, axis_info, pAxes, 0)
+                nAxisCount = set_frame_axis_index(
+                    i, j, k, imaging_roi, axis_info, pAxes, 0
+                )
 
                 # Create Frame Manager
-                frame_manager = FrameManager(hAccessor, hArea, channel_info.get_channel_id(0), pAxes, nAxisCount)
+                frame_manager = FrameManager(
+                    hAccessor, hArea, channel_info.get_channel_id(0), pAxes, nAxisCount
+                )
                 # Get Image Body
                 m_pucImageBuffer = frame_manager.get_image_body(rect)
 
@@ -142,7 +139,9 @@ def main(filepath):
     ida.Terminate()
 
 
-def set_frame_axis_index(nLIndex, nZIndex, nTIndex, pRoiCollection, pAxisInfo, pAxes, pnAxisCount):
+def set_frame_axis_index(
+    nLIndex, nZIndex, nTIndex, pRoiCollection, pAxisInfo, pAxes, pnAxisCount
+):
     # 0: LAxis
     # 1: ZAxis
     # 2: TAxis
@@ -238,6 +237,6 @@ def set_frame_axis_index(nLIndex, nZIndex, nTIndex, pRoiCollection, pAxisInfo, p
     return pnAxisCount
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     filepath = sys.argv[1]
     main(filepath)
