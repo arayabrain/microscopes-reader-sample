@@ -66,12 +66,12 @@ class ObjectiveLensInfo:
     def get_name_tm(self, hAccessor, hArea):
         result, hProp = lib.get_area_property(hAccessor, hArea, "ObjectiveLensInfo")
         result, pName = lib.get_property_value(hAccessor, hProp, "name")
-        return pName
+        return pName[0].value.pszString
 
     def get_immersion_tm(self, hAccessor, hArea):
         result, hProp = lib.get_area_property(hAccessor, hArea, "ObjectiveLensInfo")
         result, pImmersion = lib.get_property_value(hAccessor, hProp, "immersion")
-        return pImmersion
+        return pImmersion[0].value.pszString
 
     def get_magnification_tm(self):
         return self.m_dMagnification
@@ -83,4 +83,4 @@ class ObjectiveLensInfo:
         return self.m_dWD
 
     def get_reflective_index_tm(self):
-        return self.mm_dReflectiveIndex
+        return self.m_dReflectiveIndex

@@ -1,19 +1,16 @@
-import sys
 import ctypes as ct
+import json
+import os
+import sys
 
-from lib import ida
-from h_ida import (
-    IDA_Result,
-    IDA_OpenMode,
-
-    CMN_RECT,
-)
-from channel_info import ChannelInfo
 from area_image_size import AreaImageSize
 from axis_info import AxisInfo
-from pixel_length import PixelLength
-from objective_len_info import ObjectiveLensInfo
+from channel_info import ChannelInfo
 from file_creation_time import FileCreationTime
+from h_ida import CMN_RECT, IDA_OpenMode, IDA_Result
+from lib import ida
+from objective_lens_info import ObjectiveLensInfo
+from pixel_length import PixelLength
 from system_info import SystemInfo
 from user_comment import UserComment
 
@@ -43,7 +40,7 @@ def main(filepath):
 
     # Get Group Handle
     hGroup = ct.c_void_p()
-    specify_group = 0 # OIR Data has only 1 group, omp2info file may have more groups
+    specify_group = 0  # OIR Data has only 1 group, omp2info file may have more groups
     ida.GetGroup(hAccessor, hFile, specify_group, ct.byref(hGroup))
 
     # GetNumberOfLevels
@@ -52,7 +49,7 @@ def main(filepath):
 
     # GetLevelImageSize
     rect = CMN_RECT()
-    specify_layer = 0 # OIR and omp2info file has only 1 layer
+    specify_layer = 0  # OIR and omp2info file has only 1 layer
     ida.GetLevelImageSize(hAccessor, hGroup, specify_layer, ct.byref(rect))
     layer_width = rect.width
     layer_height = rect.height
@@ -101,7 +98,6 @@ def main(filepath):
     user_comment = UserComment(hAccessor, hArea)
     user_comment.print()
 
-
     # ====================
     # Something here
     # ====================
@@ -126,7 +122,67 @@ def main(filepath):
     nTLoop = nTLoop or 1
     print(nLLoop, nTLoop, nZLoop)
 
+    # ====================
+    # Output
+    # ====================
 
-if __name__ == '__main__':
+    result_data = {
+        "uiWidth": rect.width,
+        "uiHeight": rect.height,
+        "Loops": nTLoop,
+        "ZSlicenum": nZLoop,
+        "nChannel": channel_info.get_num_of_channel(),
+        "PixelLengthX": pixel_length.get_pixel_length_x(),
+        "PixelLengthY": pixel_length.get_pixel_length_y(),
+        "ZInterval": Zstep,
+        "TInterval": Tstep,
+        "ZStart": Zstart,
+        "ZEnd": Zend,
+        "ObjectiveName": objective_lens_info.get_name_tm(hAccessor, hArea),
+        "ObjectiveMag": objective_lens_info.get_magnification_tm(),
+        "ObjectiveNA": objective_lens_info.get_na_tm(),
+        "ReflectiveIndex": objective_lens_info.get_reflective_index_tm(),
+        "Immersion": objective_lens_info.get_immersion_tm(hAccessor, hArea),
+        "Date": file_creation_time.get_file_creation_time_tm(hAccessor, hArea),
+        "NumberOfGroup": num_of_group.value,
+        "NumberOfLevel": num_of_layer.value,
+        "NumberOfArea": num_of_area.value,
+        "ByteDepthCh0": channel_info.get_depth_of_ch0_tm(),
+        "SystemName": system_info.m_szSystemName,
+        "SystemVersion": system_info.m_szSystemVersion,
+        "DeviceName": system_info.m_szDeviceName,
+        "UserName": system_info.m_szUserName,
+        "CommentByUser": user_comment.m_szComment,
+    }
+
+    print("------------ result_data:")
+    print(json.dumps(result_data, indent=2))
+    save_path = os.path.basename(filepath) + f".out.metadata.json"
+    with open(save_path, "w") as f:
+        json.dump(result_data, f, indent=2)
+
+    # ====================
+    # Cleaning
+    # ====================
+    # Area
+    ida.ReleaseArea(hAccessor, hArea)
+
+    # Group
+    ida.ReleaseGroup(hAccessor, hGroup)
+
+    # File
+    ida.Close(hAccessor, hFile)
+
+    # Disconnect
+    ida.Disconnect(hAccessor)
+
+    # ReleaseAccessor
+    ida.ReleaseAccessor(hAccessor)
+
+    # Terminate
+    ida.Terminate()
+
+
+if __name__ == "__main__":
     filepath = sys.argv[1]
     main(filepath)
