@@ -127,7 +127,10 @@ def main(filepath):
                 #     result += 1
 
                 # Obtain image data in ndarray format
-                pucBuffer_to_WORD_TM = frame_manager.pucBuffer_to_WORD_TM()
+                pucBuffer_to_WORD_TM = frame_manager.pucBuffer_to_WORD_TM(
+                    area_image_size.get_x(),
+                    area_image_size.get_y(),
+                )
                 pucBuffer_ndarray = np.ctypeslib.as_array(pucBuffer_to_WORD_TM)
                 result_stack.append(pucBuffer_ndarray)
 
