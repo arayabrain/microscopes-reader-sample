@@ -138,20 +138,16 @@ def main(filepath):
         "TInterval": Tstep,
         "ZStart": Zstart,
         "ZEnd": Zend,
-        "ObjectiveName": "",  # TODO: need to convert to str.
-        # "ObjectiveName": # objective_lens_info.get_name_tm(hAccessor, hArea),
+        "ObjectiveName": objective_lens_info.get_name_tm(hAccessor, hArea),
         "ObjectiveMag": objective_lens_info.get_magnification_tm(),
         "ObjectiveNA": objective_lens_info.get_na_tm(),
         "ReflectiveIndex": objective_lens_info.get_reflective_index_tm(),
-        "Immersion": "",  # TODO: need to convert to str.
-        # "Immersion": objective_lens_info.get_immersion_tm(),
-        "Date": "",  # TODO: need to convert to str.
-        # "Date": file_creation_time.get_file_creation_time_tm(hAccessor, hArea),
+        "Immersion": objective_lens_info.get_immersion_tm(hAccessor, hArea),
+        "Date": file_creation_time.get_file_creation_time_tm(hAccessor, hArea),
         "NumberOfGroup": num_of_group.value,
         "NumberOfLevel": num_of_layer.value,
         "NumberOfArea": num_of_area.value,
-        "ByteDepthCh0": "",  # TODO: Need to resolve get_depth_of_ch0_tm() error.
-        # "ByteDepthCh0": channel_info.get_depth_of_ch0_tm(),
+        "ByteDepthCh0": channel_info.get_depth_of_ch0_tm(),
         "SystemName": system_info.m_szSystemName,
         "SystemVersion": system_info.m_szSystemVersion,
         "DeviceName": system_info.m_szDeviceName,
