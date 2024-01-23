@@ -1,20 +1,16 @@
-import sys
 import ctypes as ct
+import sys
 
-from lib import ida
-from h_ida import (
-    IDA_Result,
-    IDA_OpenMode,
-    IDA_AXIS_INFO,
-    IDA_AxisType,
+import os
+import numpy as np
 
-    CMN_RECT,
-)
-from channel_info import ChannelInfo
 from area_image_size import AreaImageSize
 from axis_info import AxisInfo
-from roi_collection import RoiCollection
+from channel_info import ChannelInfo
 from frame_manager import FrameManager
+from h_ida import CMN_RECT, IDA_AXIS_INFO, IDA_AxisType, IDA_OpenMode, IDA_Result
+from lib import ida
+from roi_collection import RoiCollection
 
 
 def main(filepath):
@@ -42,12 +38,12 @@ def main(filepath):
 
     # Get Group Handle
     hGroup = ct.c_void_p()
-    specify_group = 0 # OIR Data has only 1 group, omp2info file may have more groups
+    specify_group = 0  # OIR Data has only 1 group, omp2info file may have more groups
     ida.GetGroup(hAccessor, hFile, specify_group, ct.byref(hGroup))
 
     # GetLevelImageSize
     rect = CMN_RECT()
-    specify_layer = 0 # OIR and omp2info file has only 1 layer
+    specify_layer = 0  # OIR and omp2info file has only 1 layer
     ida.GetLevelImageSize(hAccessor, hGroup, specify_layer, ct.byref(rect))
     layer_width = rect.width
     layer_height = rect.height
@@ -89,7 +85,7 @@ def main(filepath):
     nZLoop = nZLoop or 1
 
     # Prepare mex matrices
-    # TODO: 
+    # TODO:
 
     # Retrieve all imaged area
     rect.width = area_image_size.get_x()
@@ -99,26 +95,67 @@ def main(filepath):
 
     m_pucImageBuffer = None
 
+    # Specify channel number
+    # TODO: Finally, channel_no shall be externally specifiable.
+    channel_no = 0
+
+    # Variable for storing results (image stack)
+    result_stack = []
+
     # Retrieve Image data and TimeStamp frame-by-frame
     for i in range(nLLoop):
         for j in range(nZLoop):
             for k in range(nTLoop):
-                nAxisCount = set_frame_axis_index(i, j, k, imaging_roi, axis_info, pAxes, 0)
+                nAxisCount = set_frame_axis_index(
+                    i, j, k, imaging_roi, axis_info, pAxes, 0
+                )
 
                 # Create Frame Manager
-                frame_manager = FrameManager(hAccessor, hArea, channel_info.get_channel_id(0), pAxes, nAxisCount)
+                frame_manager = FrameManager(
+                    hAccessor, hArea, channel_info.get_channel_id(0), pAxes, nAxisCount
+                )
                 # Get Image Body
                 m_pucImageBuffer = frame_manager.get_image_body(rect)
 
-                # Store Image Data Pixel by Pixel
-                frame_manager.pucBuffer_to_WORD_TM()
-                for nDataCnt in range(rect.width * rect.height):
-                    result = frame_manager.get_pixel_value_tm(nDataCnt)
-                    result += 1
+                # NOTE: Since there are concerns about the efficiency of this process
+                #       (acquiring pixel data one dot at a time), 
+                #       another process (using ndarray) is used.
+                # # Store Image Data Pixel by Pixel
+                # frame_manager.pucBuffer_to_WORD_TM()
+                # for nDataCnt in range(rect.width * rect.height):
+                #     result = frame_manager.get_pixel_value_tm(nDataCnt)
+                #     result += 1
+
+                # Obtain image data in ndarray format
+                pucBuffer_to_WORD_TM = frame_manager.pucBuffer_to_WORD_TM(
+                    area_image_size.get_x(),
+                    area_image_size.get_y(),
+                )
+                pucBuffer_ndarray = np.ctypeslib.as_array(pucBuffer_to_WORD_TM)
+                result_stack.append(pucBuffer_ndarray)
+
                 frame_manager.release_image_body()
 
                 frame_manager.get_frame_position()
                 frame_manager.write_frame_position()
+
+    # ====================
+    # Output
+    # ====================
+
+    # Save image stack (tiff format)
+    from PIL import Image
+    save_stack = [Image.fromarray(frame) for frame in result_stack]
+    save_path = (
+        os.path.basename(filepath) + f".out.ch{channel_no}.tiff"
+    )
+    print(f"save image: {save_path}")
+    save_stack[0].save(
+        save_path,
+        compression="tiff_deflate",
+        save_all=True,
+        append_images=save_stack[1:],
+    )
 
     # ====================
     # Cleaning
@@ -142,7 +179,9 @@ def main(filepath):
     ida.Terminate()
 
 
-def set_frame_axis_index(nLIndex, nZIndex, nTIndex, pRoiCollection, pAxisInfo, pAxes, pnAxisCount):
+def set_frame_axis_index(
+    nLIndex, nZIndex, nTIndex, pRoiCollection, pAxisInfo, pAxes, pnAxisCount
+):
     # 0: LAxis
     # 1: ZAxis
     # 2: TAxis
@@ -238,6 +277,6 @@ def set_frame_axis_index(nLIndex, nZIndex, nTIndex, pRoiCollection, pAxisInfo, p
     return pnAxisCount
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     filepath = sys.argv[1]
     main(filepath)
