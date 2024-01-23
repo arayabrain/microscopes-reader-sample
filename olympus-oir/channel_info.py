@@ -89,4 +89,4 @@ class ChannelInfo:
             print(f'\tAvai Bit[bit] = {self.m_vecnChannelBitCount[cnt]}')
 
     def get_depth_of_ch0_tm(self):
-        return float(self.m_vecnChannelDepth[0])
+        return self.m_vecnChannelDepth[0]
