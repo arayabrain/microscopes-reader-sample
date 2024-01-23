@@ -51,10 +51,10 @@ class FrameManager:
     def get_pixel_value_tm(self, myDataCnt):
         return self.m_pucImageBuffer_asWORD[myDataCnt]
 
-    def pucBuffer_to_WORD_TM(self):
+    def pucBuffer_to_WORD_TM(self, width, height):
         # TODO: The width and height should be obtained externally as appropriate.
         #   (If it is difficult to obtain them here, they should be obtained elsewhere.)
-        buffer_size = c_uint16 * 512 * 512
+        buffer_size = c_uint16 * width * height
 
         self.m_pucImageBuffer_asWORD = buffer_size.from_buffer(
             self.m_pucImageBuffer
