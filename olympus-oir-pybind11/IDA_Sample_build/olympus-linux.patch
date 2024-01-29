@@ -1,0 +1,39 @@
+From f4ac528b304ccb2e161c1c7fe588b439779ebbb7 Mon Sep 17 00:00:00 2001
+From: tuanna26 <tuanna@reactplus.com>
+Date: Mon, 29 Jan 2024 13:38:55 +0700
+Subject: [PATCH] Fix raw array to vector
+
+---
+ Library/IDA_Sample/IDA_Sample/FrameManager.cpp | 2 +-
+ Library/IDA_Sample/IDA_Sample/FrameManager.h   | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/Library/IDA_Sample/IDA_Sample/FrameManager.cpp b/Library/IDA_Sample/IDA_Sample/FrameManager.cpp
+index 0debd49..eab0898 100644
+--- a/Library/IDA_Sample/IDA_Sample/FrameManager.cpp
++++ b/Library/IDA_Sample/IDA_Sample/FrameManager.cpp
+@@ -17,7 +17,7 @@
+ 
+ extern int SaveTiff( unsigned char* pwData, int width, int height, int bitCount, wchar_t* pFilePathAneName );
+ 
+-CFrameManager::CFrameManager(IDA_HACCESSOR hAccessor, IDA_HAREA hArea,const wchar_t *pszChannelId, IDA_AXIS_INFO *pAxes, int nNumOfAxes )
++CFrameManager::CFrameManager(IDA_HACCESSOR hAccessor, IDA_HAREA hArea,const wchar_t *pszChannelId, std::vector<IDA_AXIS_INFO> &pAxes, int nNumOfAxes )
+ {
+ 	IDA_Result Result;
+ 	m_hAccessor = hAccessor;
+diff --git a/Library/IDA_Sample/IDA_Sample/FrameManager.h b/Library/IDA_Sample/IDA_Sample/FrameManager.h
+index 7a2d52f..a4cf8a7 100644
+--- a/Library/IDA_Sample/IDA_Sample/FrameManager.h
++++ b/Library/IDA_Sample/IDA_Sample/FrameManager.h
+@@ -80,7 +80,7 @@ private:
+ 
+ 
+ public:
+-	CFrameManager(IDA_HACCESSOR hAccessor, IDA_HAREA hArea,const wchar_t *pszChannelId, IDA_AXIS_INFO *pAxes, int nNumOfAxes );
++	CFrameManager(IDA_HACCESSOR hAccessor, IDA_HAREA hArea,const wchar_t *pszChannelId, std::vector<IDA_AXIS_INFO> &pAxes, int nNumOfAxes );
+ 	~CFrameManager(void);
+ 	unsigned char* GetImageBody( CMN_RECT Rect);
+ 	void ReleaseImageBody();
+-- 
+2.43.0
+
