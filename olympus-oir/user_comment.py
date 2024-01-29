@@ -1,5 +1,3 @@
-from ctypes import *
-
 import lib
 
 

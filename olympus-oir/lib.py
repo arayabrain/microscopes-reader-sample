@@ -1,14 +1,9 @@
 import ctypes as ct
 
-from h_ida import (
-    IDA_Result,
-    IDA_VALUE,
-    IDA_PARAM_ELEMENT,
-    IDA_PARAM,
-)
+from h_ida import IDA_Result, IDA_VALUE, IDA_PARAM_ELEMENT, IDA_PARAM, IDA_AXIS_INFO
 
 
-ida = ct.cdll.LoadLibrary('libIdaldll.so')
+ida = ct.cdll.LoadLibrary("./libs/libIdaldll.so")
 
 
 def get_property_value(hAccessor, hProp, propName):
@@ -32,7 +27,9 @@ def get_frame_property(hAccessor, hImage, key, axisName=None, axisValue=None):
         element.pszKey = axisName
         element.pValue = ct.cast(axisValue, ct.c_void_p)
         Param_AxisPosition.pElements.contents = element
-    result = ida.GetFrameProperty(hAccessor, hImage, key, ct.byref(Param_AxisPosition), ct.byref(hProp))
+    result = ida.GetFrameProperty(
+        hAccessor, hImage, key, ct.byref(Param_AxisPosition), ct.byref(hProp)
+    )
     return result, hProp
 
 
@@ -48,7 +45,9 @@ def get_area_property(hAccessor, hArea, key, element_data=None):
     else:
         param.nSize = 0
     hProp = ct.c_void_p()
-    result = ida.GetAreaProperty(hAccessor, hArea, key, ct.byref(param), ct.byref(hProp))
+    result = ida.GetAreaProperty(
+        hAccessor, hArea, key, ct.byref(param), ct.byref(hProp)
+    )
     return result, hProp
 
 
@@ -58,7 +57,9 @@ def get_lut(hAccessor, hArea, channel_id):
     pLUTR = (ct.c_int * size.value)()
     pLUTG = (ct.c_int * size.value)()
     pLUTB = (ct.c_int * size.value)()
-    result = ida.GetLUT(hAccessor, hArea, channel_id, pLUTR, pLUTG, pLUTB, size, ct.byref(size))
+    result = ida.GetLUT(
+        hAccessor, hArea, channel_id, pLUTR, pLUTG, pLUTB, size, ct.byref(size)
+    )
     return result, pLUTR, pLUTG, pLUTB
 
 
@@ -72,13 +73,19 @@ def get_image_body(hAccessor, hImage, rect):
 
     if image_size.value != 0:
         image_buffer = (ct.c_uint8 * image_size.value)()
-        result = ida.GetImageBody(hAccessor, hImage, rect, image_buffer, image_size, ct.byref(image_size))
+        result = ida.GetImageBody(
+            hAccessor, hImage, rect, image_buffer, image_size, ct.byref(image_size)
+        )
     return image_buffer
 
 
 def get_image_axis(hAccessor, hImage):
     num_of_frame_axis = ct.c_int()
-    result = ida.GetImageAxis(hAccessor, hImage, None, None, ct.byref(num_of_frame_axis))
-    pFrameAxes = (h_ida.IDA_AXIS_INFO * num_of_frame_axis.value)()
-    result = ida.GetImageAxis(hAccessor, hImage. pFrameAxes, num_of_frame_axis, ct.byref(num_of_frame_axis))
+    result = ida.GetImageAxis(
+        hAccessor, hImage, None, None, ct.byref(num_of_frame_axis)
+    )
+    pFrameAxes = (IDA_AXIS_INFO * num_of_frame_axis.value)()
+    result = ida.GetImageAxis(
+        hAccessor, hImage.pFrameAxes, num_of_frame_axis, ct.byref(num_of_frame_axis)
+    )
     return pFrameAxes

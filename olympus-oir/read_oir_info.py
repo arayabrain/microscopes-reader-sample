@@ -7,7 +7,7 @@ from area_image_size import AreaImageSize
 from axis_info import AxisInfo
 from channel_info import ChannelInfo
 from file_creation_time import FileCreationTime
-from h_ida import CMN_RECT, IDA_OpenMode, IDA_Result
+from h_ida import CMN_RECT, IDA_OpenMode
 from lib import ida
 from objective_lens_info import ObjectiveLensInfo
 from pixel_length import PixelLength
@@ -157,7 +157,7 @@ def main(filepath):
 
     print("------------ result_data:")
     print(json.dumps(result_data, indent=2))
-    save_path = os.path.basename(filepath) + f".out.metadata.json"
+    save_path = os.path.basename(filepath) + ".out.metadata.json"
     with open(save_path, "w") as f:
         json.dump(result_data, f, indent=2)
 

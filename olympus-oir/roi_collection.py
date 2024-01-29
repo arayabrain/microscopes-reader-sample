@@ -1,4 +1,4 @@
-from ctypes import *
+import ctypes as ct
 
 import lib
 from h_ida import (
@@ -42,7 +42,7 @@ class Roi:
 
     def set_points(self, pSrc, nNumOfSrc):
         for p in pSrc:
-            buf = IDA_POINT()
+            buf = IDA_VALUE.IDA_POINT()
             buf.x = p.value.point.x
             buf.y = p.value.point.y
             self.m_vecPoints.append(buf)
@@ -110,36 +110,53 @@ class Roi:
 class RoiCollection:
     def __init__(self, hAccessor, hArea, pKey_AnalysisROIList, pKey_AnalysisROIInfo):
         self.m_vecRois = []
-        result, hPropList = lib.get_area_property(hAccessor, hArea, pKey_AnalysisROIList)
+        result, hPropList = lib.get_area_property(
+            hAccessor, hArea, pKey_AnalysisROIList
+        )
         result, pAnalysisROIDs = lib.get_property_value(hAccessor, hPropList, "id")
         for a_roi in pAnalysisROIDs:
             roi = Roi()
 
             # Get Image ROI Info from ID
-            result, hPropInfo = lib.get_area_property(hAccessor, hArea, pKey_AnalysisROIInfo, ["roiId", c_wchar_p(a_roi.value.pszString)])
+            result, hPropInfo = lib.get_area_property(
+                hAccessor,
+                hArea,
+                pKey_AnalysisROIInfo,
+                ["roiId", ct.c_wchar_p(a_roi.value.pszString)],
+            )
             # Get Analysis ROI Name
-            result, pAnalysisROIName = lib.get_property_value(hAccessor, hPropInfo, "name")
-            roi.set_id(p.value.pszString)
+            result, pAnalysisROIName = lib.get_property_value(
+                hAccessor, hPropInfo, "name"
+            )
+            roi.set_id(ct.p.value.pszString)
             roi.set_name(pAnalysisROIName[0].value.pszString)
             del pAnalysisROIName
 
             # Get Analysis ROI Type
-            result, pAnalysisROIType = lib.get_property_value(hAccessor, hPropInfo, "type")
+            result, pAnalysisROIType = lib.get_property_value(
+                hAccessor, hPropInfo, "type"
+            )
             roi.set_type(pAnalysisROIType[0].value.pszString)
             del pAnalysisROIType
 
             # Get Analysis ROI Shape
-            result, pAnalysisROIShape = lib.get_property_value(hAccessor, hPropInfo, "shape")
+            result, pAnalysisROIShape = lib.get_property_value(
+                hAccessor, hPropInfo, "shape"
+            )
             roi.set_shape(pAnalysisROIShape[0].value.pszString)
             del pAnalysisROIShape
 
             # Get Analysis ROI Rotation
-            result, pAnalysisROIRotation = lib.get_property_value(hAccessor, hPropInfo, "rotation")
+            result, pAnalysisROIRotation = lib.get_property_value(
+                hAccessor, hPropInfo, "rotation"
+            )
             roi.set_rotation(pAnalysisROIRotation[0].value.dDouble)
             del pAnalysisROIRotation
 
             # Get Analysis ROI Data
-            result, pAnalysisROIData = lib.get_property_value(hAccessor, hPropInfo, "data")
+            result, pAnalysisROIData = lib.get_property_value(
+                hAccessor, hPropInfo, "data"
+            )
             roi.set_points(pAnalysisROIData, -1)
             del pAnalysisROIData
 
@@ -161,7 +178,7 @@ class RoiCollection:
                 del pZoom
 
                 # Z
-                result, pZ = lib.get_property_value(hAccessor, hPriopInfo, "zPosition")
+                result, pZ = lib.get_property_value(hAccessor, hPropInfo, "zPosition")
                 roi.set_z(pZ[0].value.dDouble)
                 del pZ
 
