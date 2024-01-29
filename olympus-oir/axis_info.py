@@ -1,4 +1,4 @@
-from ctypes import *
+import ctypes as ct
 
 
 import lib
@@ -99,7 +99,15 @@ class AxisInfo:
 
         for c_axis in pAxes:
             axis = Axis()
-            result, hPropAxis = lib.get_area_property(hAccessor, hArea, "AxisInfo", ["axisName", cast(c_wchar_p(c_axis.value.pszString), c_void_p)])
+            result, hPropAxis = lib.get_area_property(
+                hAccessor,
+                hArea,
+                "AxisInfo",
+                [
+                    "axisName",
+                    ct.cast(ct.c_wchar_p(c_axis.value.pszString), ct.c_void_p),
+                ],
+            )
             if result == 0:
                 result, pStart = lib.get_property_value(hAccessor, hPropAxis, "start")
                 axis.set_start(pStart[0].value.dDouble)
@@ -129,13 +137,13 @@ class AxisInfo:
         return self.m_axes.get(name, None)
 
     def print(self):
-        print('Axis Information')
+        print("Axis Information")
         for name, axis in self.m_axes.items():
-            print(f'\taxisName = {name}')
-            print(f'\t\tstart = {axis.get_start()}')
-            print(f'\t\tstep = {axis.get_step()}')
-            print(f'\t\tend = {axis.get_end()}')
-            print(f'\t\tmax = {axis.get_max()}')
+            print(f"\taxisName = {name}")
+            print(f"\t\tstart = {axis.get_start()}")
+            print(f"\t\tstep = {axis.get_step()}")
+            print(f"\t\tend = {axis.get_end()}")
+            print(f"\t\tmax = {axis.get_max()}")
 
     def exist(self, name):
         return name in self.m_axes

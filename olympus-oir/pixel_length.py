@@ -1,5 +1,3 @@
-from ctypes import *
-
 import lib
 
 
@@ -25,9 +23,9 @@ class PixelLength:
             ida.ReleaseProperty(hAccessor, hProp)
 
     def print(self):
-        print('Pixel length[um]')
-        print(f'\tx = {self.m_dX}')
-        print(f'\ty = {self.m_dY}')
+        print("Pixel length[um]")
+        print(f"\tx = {self.m_dX}")
+        print(f"\ty = {self.m_dY}")
 
     def get_pixel_length_x(self):
         return self.m_dX

@@ -1,7 +1,4 @@
-from ctypes import *
-
 import lib
-import h_ida
 
 
 class ObjectiveLensInfo:

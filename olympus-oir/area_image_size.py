@@ -1,7 +1,4 @@
-from ctypes import *
-
 import lib
-import h_ida
 
 
 ida = lib.ida
@@ -25,6 +22,6 @@ class AreaImageSize:
         return self.m_nY
 
     def print(self):
-        print('Image Size')
-        print(f'\tx={self.m_nX}')
-        print(f'\ty={self.m_nY}')
+        print("Image Size")
+        print(f"\tx={self.m_nX}")
+        print(f"\ty={self.m_nY}")

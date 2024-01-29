@@ -8,7 +8,7 @@ from area_image_size import AreaImageSize
 from axis_info import AxisInfo
 from channel_info import ChannelInfo
 from frame_manager import FrameManager
-from h_ida import CMN_RECT, IDA_AXIS_INFO, IDA_AxisType, IDA_OpenMode, IDA_Result
+from h_ida import CMN_RECT, IDA_AXIS_INFO, IDA_AxisType, IDA_OpenMode
 from lib import ida
 from roi_collection import RoiCollection
 
@@ -118,7 +118,7 @@ def main(filepath):
                 m_pucImageBuffer = frame_manager.get_image_body(rect)
 
                 # NOTE: Since there are concerns about the efficiency of this process
-                #       (acquiring pixel data one dot at a time), 
+                #       (acquiring pixel data one dot at a time),
                 #       another process (using ndarray) is used.
                 # # Store Image Data Pixel by Pixel
                 # frame_manager.pucBuffer_to_WORD_TM()
@@ -145,10 +145,9 @@ def main(filepath):
 
     # Save image stack (tiff format)
     from PIL import Image
+
     save_stack = [Image.fromarray(frame) for frame in result_stack]
-    save_path = (
-        os.path.basename(filepath) + f".out.ch{channel_no}.tiff"
-    )
+    save_path = os.path.basename(filepath) + f".out.ch{channel_no}.tiff"
     print(f"save image: {save_path}")
     save_stack[0].save(
         save_path,
@@ -202,7 +201,7 @@ def set_frame_axis_index(
         pAxes[0].nType = IDA_AxisType.IDA_AT_TIME
         pnAxisCount = 1
     elif pRoiCollection.has_mapping_roi():
-        if bHasAxis[1] == False:
+        if not bHasAxis[1]:
             pAxes[0].nNumber = nTIndex
             pAxes[0].nType = IDA_AxisType.IDA_AT_TIME
             pnAxisCount = 1
@@ -213,15 +212,15 @@ def set_frame_axis_index(
             pAxes[1].nType = IDA_AxisType.IDA_AT_TIME
             pnAxisCount = 2
     elif pRoiCollection.has_line_roi():
-        if bHasAxis[0] == False and bHasAxis[1] == False and bHasAxis[2] == True:
+        if not bHasAxis[0] and not bHasAxis[1] and bHasAxis[2]:
             pAxes[0].nNumber = nTIndex
             pAxes[0].nType = IDA_AxisType.IDA_AT_TIME
             pnAxisCount = 1
-        elif bHasAxis[0] == False and bHasAxis[1] == True and bHasAxis[2] == False:
+        elif not bHasAxis[0] and bHasAxis[1] and not bHasAxis[2]:
             pAxes[0].nNumber = nZIndex
             pAxes[0].nType = IDA_AxisType.IDA_AT_Z
             pnAxisCount = 1
-        elif bHasAxis[0] == False and bHasAxis[1] == True and bHasAxis[2] == True:
+        elif not bHasAxis[0] and bHasAxis[1] and bHasAxis[2]:
             pAxes[0].nNumber = nZIndex
             pAxes[0].nType = IDA_AxisType.IDA_AT_Z
             pAxes[1].nNumber = nTIndex
@@ -231,7 +230,7 @@ def set_frame_axis_index(
             # TODO: What?
             pass
     else:
-        if nSize[0] != 0 and nSize[1] != 0 and nSzie[2] != 0:
+        if nSize[0] != 0 and nSize[1] != 0 and nSize[2] != 0:
             pAxes[0].nNumber = nLIndex
             pAxes[0].nType = IDA_AxisType.IDA_AT_LAMBDA
             pAxes[1].nNumber = nZIndex

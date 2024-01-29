@@ -1,4 +1,4 @@
-from ctypes import *
+import ctypes as ct
 
 import lib
 import h_ida
@@ -21,24 +21,30 @@ class FrameManager:
             ainfo.nNumber = axis.nNumber
             ainfo.nType = axis.nType
             self.m_pAxes.append(ainfo)
-        self.m_hImage = c_void_p()
+        self.m_hImage = ct.c_void_p()
         self.m_rect = None
         self.m_pucImageBuffer = None
         self.m_pucImageBuffer_asWORD = None
         self.m_vecAxisIndex = []
         self.m_vecAxisPosition = []
         self.m_vecRois = []
-        lib.ida.GetImage(hAccessor, hArea, pszChannelId, pAxes, nNumOfAxes, byref(self.m_hImage))
+        lib.ida.GetImage(
+            hAccessor, hArea, pszChannelId, pAxes, nNumOfAxes, ct.byref(self.m_hImage)
+        )
 
     def get_image_body(self, rect):
         self.m_rect = rect
-        self.m_pucImageBuffer = lib.get_image_body(self.m_hAccessor, self.m_hImage, byref(self.m_rect))
+        self.m_pucImageBuffer = lib.get_image_body(
+            self.m_hAccessor, self.m_hImage, ct.byref(self.m_rect)
+        )
         return self.m_pucImageBuffer
 
     def release_image_body(self):
         if self.m_pucImageBuffer:
             self.m_pucImagebuffer = None
-            self.m_pucImageBuffer_asWORD = cast(self.m_pucImageBuffer, POINTER(c_uint16))
+            self.m_pucImageBuffer_asWORD = ct.cast(
+                self.m_pucImageBuffer, ct.POINTER(ct.c_uint16)
+            )
 
     def write_image_body(self, filename):
         # TODO: Do something here
@@ -54,20 +60,19 @@ class FrameManager:
     def pucBuffer_to_WORD_TM(self, width, height):
         # TODO: The width and height should be obtained externally as appropriate.
         #   (If it is difficult to obtain them here, they should be obtained elsewhere.)
-        buffer_size = c_uint16 * width * height
+        buffer_size = ct.c_uint16 * width * height
 
-        self.m_pucImageBuffer_asWORD = buffer_size.from_buffer(
-            self.m_pucImageBuffer
-        )
+        self.m_pucImageBuffer_asWORD = buffer_size.from_buffer(self.m_pucImageBuffer)
 
         return self.m_pucImageBuffer_asWORD
+
     def get_frame_index(self):
         pFrameAxes = lib.get_image_axis(self.m_hAccessor, self.m_hImage)
         for f in pFrameAxes:
             axis_index = AxisIndex()
             axis_index.set_exit(True)
-            axis_index.set_type(p.nType)
-            axis_index.set_index(p.nNumber)
+            axis_index.set_type(ct.p.nType)
+            axis_index.set_index(ct.p.nNumber)
             self.m_vecAxisIndex.append(axis_index)
 
         del pFrameAxes
@@ -79,9 +84,13 @@ class FrameManager:
                 print(f"\tType={ai.get_type()}, Number={ai.get_index()}")
 
     def get_frame_position(self):
-        result, hProp = lib.get_frame_property(self.m_hAccessor, self.m_hImage, "AxisPosition", "axisName", "TIMELAPSE")
+        result, hProp = lib.get_frame_property(
+            self.m_hAccessor, self.m_hImage, "AxisPosition", "axisName", "TIMELAPSE"
+        )
         if result == 0:
-            result, pAxisPosition = lib.get_property_value(self.m_hAccessor, hProp, "position")
+            result, pAxisPosition = lib.get_property_value(
+                self.m_hAccessor, hProp, "position"
+            )
             axis_pos = AxisPosition()
             axis_pos.set_type(h_ida.IDA_AxisType.IDA_AT_TIME)
             axis_pos.set_exit(True)
@@ -91,9 +100,13 @@ class FrameManager:
         if hProp:
             lib.ida.ReleaseProperty(self.m_hAccessor, hProp)
 
-        result, hProp = lib.get_frame_property(self.m_hAccessor, self.m_hImage, "AxisPosition", "axisName", "ZSTACK")
+        result, hProp = lib.get_frame_property(
+            self.m_hAccessor, self.m_hImage, "AxisPosition", "axisName", "ZSTACK"
+        )
         if result == 0:
-            result, pAxisPosition = lib.get_property_value(self.m_hAccessor, hProp, "position")
+            result, pAxisPosition = lib.get_property_value(
+                self.m_hAccessor, hProp, "position"
+            )
             axis_pos = AxisPosition()
             axis_pos.set_type(h_ida.IDA_AxisType.IDA_AT_Z)
             axis_pos.set_exit(True)
@@ -103,9 +116,13 @@ class FrameManager:
         if hProp:
             lib.ida.ReleaseProperty(self.m_hAccessor, hProp)
 
-        result, hProp = lib.get_frame_property(self.m_hAccessor, self.m_hImage, "AxisPosition", "axisName", "LAMBDA")
+        result, hProp = lib.get_frame_property(
+            self.m_hAccessor, self.m_hImage, "AxisPosition", "axisName", "LAMBDA"
+        )
         if result == 0:
-            reuslt, pAxisPosition = lib.get_property_value(self.m_hAccessor, hProp, "position")
+            reuslt, pAxisPosition = lib.get_property_value(
+                self.m_hAccessor, hProp, "position"
+            )
             axis_pos = AxisPosition()
             axis_pos.set_type(h_ida.IDA_AxisType.IDA_AT_LAMBDA)
             axis_pos.set_exit(True)
@@ -140,56 +157,82 @@ class FrameManager:
         return mytimestamp
 
     def get_frame_roi(self):
-        result, hProp = lib.get_frame_property(self.m_hAccessor, self.m_hImage, "StimulationROIList")
+        result, hProp = lib.get_frame_property(
+            self.m_hAccessor, self.m_hImage, "StimulationROIList"
+        )
         result, pAnalysisROIDs = lib.get_property_value(self.m_hAccessor, hProp, "id")
         for aroi in pAnalysisROIDs:
             roi = Roi()
             # Get Image ROI Info from ID
-            result, hPropInfo = lib.get_frame_property(self.m_hAccessor, self.m_hImage, "StimulationROIInfo", "roiId", c_wchar_p(aroi.value.pszString))
+            result, hPropInfo = lib.get_frame_property(
+                self.m_hAccessor,
+                self.m_hImage,
+                "StimulationROIInfo",
+                "roiId",
+                ct.c_wchar_p(aroi.value.pszString),
+            )
             # Get Analysis ROI Name
-            result, pAnalysisROIName = lib.get_property_value(self.m_hAccessor, hPropInfo, "name")
+            result, pAnalysisROIName = lib.get_property_value(
+                self.m_hAccessor, hPropInfo, "name"
+            )
             roi.set_id(aroi.value.pszString)
             roi.set_name(pAnalysisROIName[0].value.pszString)
             del pAnalysisROIName
 
             # Get Analysis ROI Type
-            result, pAnalysisROIType = lib.get_property_value(self.m_hAccessor, hPropInfo, "type")
+            result, pAnalysisROIType = lib.get_property_value(
+                self.m_hAccessor, hPropInfo, "type"
+            )
             roi.set_type(pAnalysisROIType[0].value.pszString)
             del pAnalysisROIType
 
             # Get Analysis ROI Shape
-            result, pAnalysisROIShape = lib.get_property_value(self.m_hAccessor, hPropInfo, "shape")
+            result, pAnalysisROIShape = lib.get_property_value(
+                self.m_hAccessor, hPropInfo, "shape"
+            )
             roi.set_shape(pAnalysisROIShape[0].value.pszString)
             del pAnalysisROIShape
 
             # Get Analysis ROI Rotation
-            result, pAnalysisROIRotation = lib.get_property_value(self.m_hAccessor, hPropInfo, "rotation")
+            result, pAnalysisROIRotation = lib.get_property_value(
+                self.m_hAccessor, hPropInfo, "rotation"
+            )
             roi.set_rotation(pAnalysisROIRotation[0].value.dDouble)
             del pAnalysisROIRotation
 
             # Get Analysis ROI Data
-            result, pAnalysisData = lib.get_property_value(self.m_hAccessor, hPropInfo, "data")
+            result, pAnalysisData = lib.get_property_value(
+                self.m_hAccessor, hPropInfo, "data"
+            )
             roi.set_points(pAnalysisROIData, -1)
             del pAnalysisData
 
             if roi.get_type() == "MULTI_POINT":
                 # PanX
-                result, pPanX = lib.get_property_value(self.m_hAccessor, hPropInfo, "panX")
+                result, pPanX = lib.get_property_value(
+                    self.m_hAccessor, hPropInfo, "panX"
+                )
                 roi.set_pan_x(pPanX[0].value.dDouble)
                 del pPanX
 
                 # PanY
-                result, pPanY = lib.get_property_value(self.m_hAccessor, hPropInfo, "panY")
+                result, pPanY = lib.get_property_value(
+                    self.m_hAccessor, hPropInfo, "panY"
+                )
                 roi.set_pan_y(pPanY[0].value.dDouble)
                 del pPanY
 
                 # Zoom
-                result, pZoom = lib.get_property_value(self.m_hAccessor, hPropInfo, "zoom")
+                result, pZoom = lib.get_property_value(
+                    self.m_hAccessor, hPropInfo, "zoom"
+                )
                 roi.set_zoom(pZoom[0].value.dDouble)
                 del pZoom
 
                 # Z
-                result, pZ = lib.get_property_value(self.m_hAccessor, hPropInfo, "zPosition")
+                result, pZ = lib.get_property_value(
+                    self.m_hAccessor, hPropInfo, "zPosition"
+                )
                 roi.set_z(pZ[0].value.dDouble)
                 del pZ
 
