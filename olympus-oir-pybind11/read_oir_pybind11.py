@@ -87,7 +87,7 @@ def main(filepath):
     print("nLLoop, nZLoop, nTLoop:", nLLoop, nZLoop, nTLoop)
 
     # Retrieve all imaged area
-    rect = CMN_RECT()
+    rect = ida_sample_lib.CMN_RECT()
     rect.width = area_image_size.GetX()
     rect.height = area_image_size.GetY()
     rect.x = 0
@@ -97,13 +97,10 @@ def main(filepath):
     # Read Image Stack
     # ==============================
 
-    # TODO: Requires implementation.
-
-    pAxes = (IDA_AXIS_INFO * 3)()
+    pAxes = ida_sample_lib.VectorAxisInfo(3)
     nAxisCount = 1  # dummy
 
     # Create Frame Manager
-    # TODO: Arguments must be of the appropriate type (pAxes)
     frame_manager = ida_sample_lib.FrameManager(
         cps_hAccessor, cps_hArea, channel_info.GetChannelId(0), pAxes, nAxisCount
     )
