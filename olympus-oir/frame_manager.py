@@ -120,7 +120,7 @@ class FrameManager:
             self.m_hAccessor, self.m_hImage, "AxisPosition", "axisName", "LAMBDA"
         )
         if result == 0:
-            reuslt, pAxisPosition = lib.get_property_value(
+            result, pAxisPosition = lib.get_property_value(
                 self.m_hAccessor, hProp, "position"
             )
             axis_pos = AxisPosition()
