@@ -204,6 +204,7 @@ class FrameManager:
             result, pAnalysisData = lib.get_property_value(
                 self.m_hAccessor, hPropInfo, "data"
             )
+            # TODO: "undefined name 'pAnalysisROIData'" warning. (probably a runtime error).
             roi.set_points(pAnalysisROIData, -1)
             del pAnalysisData
 
