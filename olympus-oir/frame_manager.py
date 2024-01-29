@@ -71,8 +71,9 @@ class FrameManager:
         for f in pFrameAxes:
             axis_index = AxisIndex()
             axis_index.set_exit(True)
-            axis_index.set_type(ct.p.nType)
-            axis_index.set_index(ct.p.nNumber)
+            # TODO: Is the following code correct? (p.nType, p.nNumber)
+            axis_index.set_type(p.nType)
+            axis_index.set_index(p.nNumber)
             self.m_vecAxisIndex.append(axis_index)
 
         del pFrameAxes
