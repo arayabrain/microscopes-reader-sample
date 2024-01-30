@@ -33,8 +33,8 @@ def main(filepath):
     result = ida.Open(hAccessor, filepath, IDA_OpenMode.IDA_OM_READ, ct.byref(hFile))
 
     # GetNumberOfGroup
-    num_of_group = ct.c_int()
-    ida.GetNumOfGroups(hAccessor, hFile, ct.byref(num_of_group))
+    num_of_groups = ct.c_int()
+    ida.GetNumOfGroups(hAccessor, hFile, ct.byref(num_of_groups))
 
     # Get Group Handle
     hGroup = ct.c_void_p()

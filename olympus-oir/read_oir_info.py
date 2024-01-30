@@ -35,8 +35,8 @@ def main(filepath):
     result = ida.Open(hAccessor, filepath, IDA_OpenMode.IDA_OM_READ, ct.byref(hFile))
 
     # GetNumberOfGroup
-    num_of_group = ct.c_int()
-    ida.GetNumOfGroups(hAccessor, hFile, ct.byref(num_of_group))
+    num_of_groups = ct.c_int()
+    ida.GetNumOfGroups(hAccessor, hFile, ct.byref(num_of_groups))
 
     # Get Group Handle
     hGroup = ct.c_void_p()
@@ -44,8 +44,8 @@ def main(filepath):
     ida.GetGroup(hAccessor, hFile, specify_group, ct.byref(hGroup))
 
     # GetNumberOfLevels
-    num_of_layer = ct.c_int()
-    ida.GetNumOfLevels(hAccessor, hGroup, ct.byref(num_of_layer))
+    num_of_levels = ct.c_int()
+    ida.GetNumOfLevels(hAccessor, hGroup, ct.byref(num_of_levels))
 
     # GetLevelImageSize
     rect = CMN_RECT()
@@ -144,8 +144,8 @@ def main(filepath):
         "ReflectiveIndex": objective_lens_info.reflective_index,
         "Immersion": objective_lens_info.immersion,
         "Date": file_creation_time.creation_time,
-        "NumberOfGroup": num_of_group.value,
-        "NumberOfLevel": num_of_layer.value,
+        "NumberOfGroup": num_of_groups.value,
+        "NumberOfLevel": num_of_levels.value,
         "NumberOfArea": num_of_area.value,
         "ByteDepthCh0": channel_info.depth_of_ch0,
         "SystemName": system_info.system_name,
