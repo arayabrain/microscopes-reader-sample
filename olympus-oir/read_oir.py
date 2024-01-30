@@ -84,9 +84,6 @@ def main(filepath):
     nTLoop = nTLoop or 1
     nZLoop = nZLoop or 1
 
-    # Prepare mex matrices
-    # TODO:
-
     # Retrieve all imaged area
     rect.width = area_image_size.get_x()
     rect.height = area_image_size.get_y()
@@ -113,24 +110,13 @@ def main(filepath):
                         pAxes,
                         nAxisCount,
                     )
-                    # Get Image Body
-                    m_pucImageBuffer = frame_manager.get_image_body(rect)
 
-                    # NOTE: Since there are concerns about the efficiency of this process
-                    #       (acquiring pixel data one dot at a time),
-                    #       another process (using ndarray) is used.
-                    # # Store Image Data Pixel by Pixel
-                    # frame_manager.pucBuffer_to_WORD_TM()
-                    # for nDataCnt in range(rect.width * rect.height):
-                    #     result = frame_manager.get_pixel_value_tm(nDataCnt)
-                    #     result += 1
+                    # Get Image Body
+                    buffer_pointer = frame_manager.get_image_body(rect)
+                    ctypes_buffer_ptr = buffer_pointer[1]
 
                     # Obtain image data in ndarray format
-                    pucBuffer_to_WORD_TM = frame_manager.pucBuffer_to_WORD_TM(
-                        area_image_size.get_x(),
-                        area_image_size.get_y(),
-                    )
-                    pucBuffer_ndarray = np.ctypeslib.as_array(pucBuffer_to_WORD_TM)
+                    pucBuffer_ndarray = np.ctypeslib.as_array(ctypes_buffer_ptr)
                     result_stack.append(pucBuffer_ndarray)
 
                     frame_manager.release_image_body()
