@@ -7,6 +7,7 @@ from axis_info import (
     AxisIndex,
     AxisPosition,
 )
+from roi_collection import Roi
 
 
 class FrameManager:
@@ -29,7 +30,12 @@ class FrameManager:
         self.m_vecAxisPosition = []
         self.m_vecRois = []
         lib.ida.GetImage(
-            hAccessor, hArea, pszChannelId, pAxes, nNumOfAxes, ct.byref(self.m_hImage)
+            hAccessor,
+            hArea,
+            pszChannelId,
+            pAxes,
+            nNumOfAxes,
+            ct.byref(self.m_hImage),
         )
 
     def get_image_body(self, rect):
@@ -68,7 +74,7 @@ class FrameManager:
 
     def get_frame_index(self):
         pFrameAxes = lib.get_image_axis(self.m_hAccessor, self.m_hImage)
-        for f in pFrameAxes:
+        for p in pFrameAxes:
             axis_index = AxisIndex()
             axis_index.set_exit(True)
             # TODO: Is the following code correct? (p.nType, p.nNumber)
@@ -86,7 +92,11 @@ class FrameManager:
 
     def get_frame_position(self):
         result, hProp = lib.get_frame_property(
-            self.m_hAccessor, self.m_hImage, "AxisPosition", "axisName", "TIMELAPSE"
+            self.m_hAccessor,
+            self.m_hImage,
+            "AxisPosition",
+            "axisName",
+            "TIMELAPSE",
         )
         if result == 0:
             result, pAxisPosition = lib.get_property_value(
@@ -102,7 +112,11 @@ class FrameManager:
             lib.ida.ReleaseProperty(self.m_hAccessor, hProp)
 
         result, hProp = lib.get_frame_property(
-            self.m_hAccessor, self.m_hImage, "AxisPosition", "axisName", "ZSTACK"
+            self.m_hAccessor,
+            self.m_hImage,
+            "AxisPosition",
+            "axisName",
+            "ZSTACK",
         )
         if result == 0:
             result, pAxisPosition = lib.get_property_value(
@@ -118,7 +132,11 @@ class FrameManager:
             lib.ida.ReleaseProperty(self.m_hAccessor, hProp)
 
         result, hProp = lib.get_frame_property(
-            self.m_hAccessor, self.m_hImage, "AxisPosition", "axisName", "LAMBDA"
+            self.m_hAccessor,
+            self.m_hImage,
+            "AxisPosition",
+            "axisName",
+            "LAMBDA",
         )
         if result == 0:
             result, pAxisPosition = lib.get_property_value(
@@ -161,7 +179,11 @@ class FrameManager:
         result, hProp = lib.get_frame_property(
             self.m_hAccessor, self.m_hImage, "StimulationROIList"
         )
-        result, pAnalysisROIDs = lib.get_property_value(self.m_hAccessor, hProp, "id")
+        result, pAnalysisROIDs = lib.get_property_value(
+            self.m_hAccessor,
+            hProp,
+            "id",
+        )
         for aroi in pAnalysisROIDs:
             roi = Roi()
             # Get Image ROI Info from ID
@@ -202,12 +224,11 @@ class FrameManager:
             del pAnalysisROIRotation
 
             # Get Analysis ROI Data
-            result, pAnalysisData = lib.get_property_value(
+            result, pAnalysisROIData = lib.get_property_value(
                 self.m_hAccessor, hPropInfo, "data"
             )
-            # TODO: "undefined name 'pAnalysisROIData'" warning. (probably a runtime error).
             roi.set_points(pAnalysisROIData, -1)
-            del pAnalysisData
+            del pAnalysisROIData
 
             if roi.get_type() == "MULTI_POINT":
                 # PanX

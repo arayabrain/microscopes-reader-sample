@@ -82,10 +82,10 @@ def get_image_body(hAccessor, hImage, rect):
 def get_image_axis(hAccessor, hImage):
     num_of_frame_axis = ct.c_int()
     result = ida.GetImageAxis(
-        hAccessor, hImage, None, None, ct.byref(num_of_frame_axis)
+        hAccessor, hImage, None, 0, ct.byref(num_of_frame_axis)
     )
     pFrameAxes = (IDA_AXIS_INFO * num_of_frame_axis.value)()
     result = ida.GetImageAxis(
-        hAccessor, hImage.pFrameAxes, num_of_frame_axis, ct.byref(num_of_frame_axis)
+        hAccessor, hImage, pFrameAxes, num_of_frame_axis, ct.byref(num_of_frame_axis)
     )
     return pFrameAxes
