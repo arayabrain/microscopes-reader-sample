@@ -3,8 +3,6 @@ import ctypes as ct
 import lib
 import h_ida
 
-ida = lib.ida
-
 
 class ChannelInfo:
     def __init__(self, hAccessor, hArea):
@@ -67,10 +65,10 @@ class ChannelInfo:
                 self.m_vecpnChannelLUTB.append(lut_b)
 
             if hPropChannel:
-                ida.ReleaseProperty(hAccessor, hPropChannel)
+                lib.ida.ReleaseProperty(hAccessor, hPropChannel)
 
         if hPropEnabled:
-            ida.ReleaseProperty(hAccessor, hPropEnabled)
+            lib.ida.ReleaseProperty(hAccessor, hPropEnabled)
         if pChIDs:
             del pChIDs
 

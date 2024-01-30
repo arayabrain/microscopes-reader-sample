@@ -177,7 +177,7 @@ def main(filepath):
     ida.Disconnect(hAccessor)
 
     # ReleaseAccessor
-    ida.ReleaseAccessor(hAccessor)
+    ida.ReleaseAccessor(ct.byref(hAccessor))
 
     # Terminate
     ida.Terminate()

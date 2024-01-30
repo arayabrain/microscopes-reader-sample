@@ -71,8 +71,9 @@ class FrameManager:
         for f in pFrameAxes:
             axis_index = AxisIndex()
             axis_index.set_exit(True)
-            axis_index.set_type(ct.p.nType)
-            axis_index.set_index(ct.p.nNumber)
+            # TODO: Is the following code correct? (p.nType, p.nNumber)
+            axis_index.set_type(p.nType)
+            axis_index.set_index(p.nNumber)
             self.m_vecAxisIndex.append(axis_index)
 
         del pFrameAxes
@@ -120,7 +121,7 @@ class FrameManager:
             self.m_hAccessor, self.m_hImage, "AxisPosition", "axisName", "LAMBDA"
         )
         if result == 0:
-            reuslt, pAxisPosition = lib.get_property_value(
+            result, pAxisPosition = lib.get_property_value(
                 self.m_hAccessor, hProp, "position"
             )
             axis_pos = AxisPosition()
@@ -204,6 +205,7 @@ class FrameManager:
             result, pAnalysisData = lib.get_property_value(
                 self.m_hAccessor, hPropInfo, "data"
             )
+            # TODO: "undefined name 'pAnalysisROIData'" warning. (probably a runtime error).
             roi.set_points(pAnalysisROIData, -1)
             del pAnalysisData
 
