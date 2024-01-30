@@ -1,9 +1,12 @@
+"""Olympus IDA wrapper module
+
+* Porting of IDA_Sample/RoiCollection.h,cpp
+
+"""
 import ctypes as ct
 
 import lib
-from h_ida import (
-    IDA_VALUE,
-)
+from h_ida import IDA_VALUE
 
 
 class Roi:

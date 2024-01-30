@@ -1,12 +1,14 @@
+"""Olympus IDA wrapper module
+
+* Porting of IDA_Sample/FrameManager.h,cpp
+
+"""
 import ctypes as ct
 
-import lib
 import h_ida
-
-from axis_info import (
-    AxisIndex,
-    AxisPosition,
-)
+import lib
+from axis_info import AxisIndex, AxisPosition
+from roi_collection import Roi
 
 
 class FrameManager:
@@ -47,11 +49,11 @@ class FrameManager:
             )
 
     def write_image_body(self, filename):
-        # TODO: Do something here
+        # Note: Not impletented.
         pass
 
     def write_image_body_binary(self, filename):
-        # TODO: Do something here
+        # Note: Not impletented.
         pass
 
     def get_pixel_value_tm(self, myDataCnt):
@@ -68,10 +70,9 @@ class FrameManager:
 
     def get_frame_index(self):
         pFrameAxes = lib.get_image_axis(self.m_hAccessor, self.m_hImage)
-        for f in pFrameAxes:
+        for p in pFrameAxes:
             axis_index = AxisIndex()
             axis_index.set_exit(True)
-            # TODO: Is the following code correct? (p.nType, p.nNumber)
             axis_index.set_type(p.nType)
             axis_index.set_index(p.nNumber)
             self.m_vecAxisIndex.append(axis_index)
@@ -202,12 +203,11 @@ class FrameManager:
             del pAnalysisROIRotation
 
             # Get Analysis ROI Data
-            result, pAnalysisData = lib.get_property_value(
+            result, pAnalysisROIData = lib.get_property_value(
                 self.m_hAccessor, hPropInfo, "data"
             )
-            # TODO: "undefined name 'pAnalysisROIData'" warning. (probably a runtime error).
             roi.set_points(pAnalysisROIData, -1)
-            del pAnalysisData
+            del pAnalysisROIData
 
             if roi.get_type() == "MULTI_POINT":
                 # PanX
