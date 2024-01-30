@@ -5,8 +5,6 @@ import lib
 import h_ida
 
 
-ida = lib.ida
-
 
 class AxisIndex:
     def __init__(self):
@@ -126,12 +124,12 @@ class AxisInfo:
                 del pMax
                 self.m_axes[c_axis.value.pszString] = axis
                 if hPropAxis:
-                    ida.ReleaseProperty(hAccessor, hPropAxis)
+                    lib.ida.ReleaseProperty(hAccessor, hPropAxis)
         if pAxes:
             del pAxes
 
         if hPropAxes:
-            ida.ReleaseProperty(hAccessor, hPropAxes)
+            lib.ida.ReleaseProperty(hAccessor, hPropAxes)
 
     def get_axis(self, name):
         return self.m_axes.get(name, None)
