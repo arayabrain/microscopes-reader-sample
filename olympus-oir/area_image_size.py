@@ -1,8 +1,6 @@
 import lib
 
 
-ida = lib.ida
-
 
 class AreaImageSize:
     def __init__(self, hAccessor, hArea):
@@ -13,7 +11,7 @@ class AreaImageSize:
         if pImageSize:
             del pImageSize
         if hProp:
-            ida.ReleaseProperty(hAccessor, hProp)
+            lib.ida.ReleaseProperty(hAccessor, hProp)
 
     def get_x(self):
         return self.m_nX
