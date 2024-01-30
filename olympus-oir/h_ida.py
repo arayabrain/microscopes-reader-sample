@@ -1,5 +1,10 @@
-from enum import IntEnum, auto
+"""Olympus IDA wrapper module
+
+* Porting of IDA/include/Idaldll.h
+
+"""
 import ctypes as ct
+from enum import IntEnum, auto
 
 
 class IDA_Result(IntEnum):
@@ -29,6 +34,8 @@ class IDA_OpenMode(IntEnum):
     IDA_OM_NORMAL = 0x00
     IDA_OM_FORCE = 0x02
     IDA_OM_STREAMING = 0x04
+    IDA_OM_READ_WRITE = 0x08
+    IDA_OM_APPEND = 0x10
 
 
 class CMN_RECT(ct.Structure):
