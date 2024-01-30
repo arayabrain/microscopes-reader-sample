@@ -1,7 +1,12 @@
+"""Olympus IDA wrapper module
+
+* Porting of IDA_Sample/ChannelInfo.h,cpp
+
+"""
 import ctypes as ct
 
-import lib
 import h_ida
+import lib
 
 
 class ChannelInfo:
@@ -25,7 +30,6 @@ class ChannelInfo:
         # Get Channel Info
         for ch in pChIDs:
             self.m_vecpszChannelIdList.append(ch.value.pszString)
-            print(ch.value.pszString)
 
             result, hPropChannel = lib.get_area_property(
                 hAccessor,
@@ -101,5 +105,6 @@ class ChannelInfo:
             print(f"\tDepth[byte] = {self.m_vecnChannelDepth[cnt]}")
             print(f"\tAvai Bit[bit] = {self.m_vecnChannelBitCount[cnt]}")
 
-    def get_depth_of_ch0_tm(self):
+    @property
+    def depth_of_ch0(self):
         return self.m_vecnChannelDepth[0]

@@ -1,9 +1,9 @@
 import ctypes as ct
+import os
 import sys
 
-import os
+import lib
 import numpy as np
-
 from area_image_size import AreaImageSize
 from axis_info import AxisInfo
 from channel_info import ChannelInfo
@@ -101,13 +101,17 @@ def main(filepath):
         for i in range(nLLoop):
             for j in range(nZLoop):
                 for k in range(nTLoop):
-                    nAxisCount = set_frame_axis_index(
+                    nAxisCount = lib.set_frame_axis_index(
                         i, j, k, imaging_roi, axis_info, pAxes, 0
                     )
 
                     # Create Frame Manager
                     frame_manager = FrameManager(
-                        hAccessor, hArea, channel_info.get_channel_id(channel_no), pAxes, nAxisCount
+                        hAccessor,
+                        hArea,
+                        channel_info.get_channel_id(channel_no),
+                        pAxes,
+                        nAxisCount,
                     )
                     # Get Image Body
                     m_pucImageBuffer = frame_manager.get_image_body(rect)
@@ -171,104 +175,6 @@ def main(filepath):
 
     # Terminate
     ida.Terminate()
-
-
-def set_frame_axis_index(
-    nLIndex, nZIndex, nTIndex, pRoiCollection, pAxisInfo, pAxes, pnAxisCount
-):
-    # 0: LAxis
-    # 1: ZAxis
-    # 2: TAxis
-    KEY = ["LAMBDA", "ZSTACK", "TIMELAPSE"]
-    nSize = [0] * 3
-    bHasAxis = [pAxisInfo.exist(key) for key in KEY]
-    pAxis = [pAxisInfo.get_axis(key) for key in KEY]
-    pnAxisCount = 0
-    for i in range(3):
-        if bHasAxis[i]:
-            nSize[i] = pAxis[i].get_max()
-    if pRoiCollection.has_point_roi():
-        pAxes[0].nNumber = nTIndex
-        pAxes[0].nType = IDA_AxisType.IDA_AT_TIME
-        pnAxisCount = 1
-    elif pRoiCollection.has_multi_point_roi():
-        pAxes[0].nNumber = nTIndex
-        pAxes[0].nType = IDA_AxisType.IDA_AT_TIME
-        pnAxisCount = 1
-    elif pRoiCollection.has_mapping_roi():
-        if not bHasAxis[1]:
-            pAxes[0].nNumber = nTIndex
-            pAxes[0].nType = IDA_AxisType.IDA_AT_TIME
-            pnAxisCount = 1
-        else:
-            pAxes[0].nNumber = nZIndex
-            pAxes[0].nType = IDA_AxisType.IDA_AT_Z
-            pAxes[1].nNumber = nTIndex
-            pAxes[1].nType = IDA_AxisType.IDA_AT_TIME
-            pnAxisCount = 2
-    elif pRoiCollection.has_line_roi():
-        if not bHasAxis[0] and not bHasAxis[1] and bHasAxis[2]:
-            pAxes[0].nNumber = nTIndex
-            pAxes[0].nType = IDA_AxisType.IDA_AT_TIME
-            pnAxisCount = 1
-        elif not bHasAxis[0] and bHasAxis[1] and not bHasAxis[2]:
-            pAxes[0].nNumber = nZIndex
-            pAxes[0].nType = IDA_AxisType.IDA_AT_Z
-            pnAxisCount = 1
-        elif not bHasAxis[0] and bHasAxis[1] and bHasAxis[2]:
-            pAxes[0].nNumber = nZIndex
-            pAxes[0].nType = IDA_AxisType.IDA_AT_Z
-            pAxes[1].nNumber = nTIndex
-            pAxes[1].nType = IDA_AxisType.IDA_AT_TIME
-            pnAxisCount = 2
-        else:
-            # TODO: What?
-            pass
-    else:
-        if nSize[0] != 0 and nSize[1] != 0 and nSize[2] != 0:
-            pAxes[0].nNumber = nLIndex
-            pAxes[0].nType = IDA_AxisType.IDA_AT_LAMBDA
-            pAxes[1].nNumber = nZIndex
-            pAxes[1].nType = IDA_AxisType.IDA_AT_Z
-            pAxes[2].nNumber = nTIndex
-            pAxes[2].nType = IDA_AxisType.IDA_AT_TIME
-            pnAxisCount = 3
-        elif nSize[0] != 0 and nSize[1] != 0 and nSize[2] == 0:
-            pAxes[0].nNumber = nLIndex
-            pAxes[0].nType = IDA_AxisType.IDA_AT_LAMBDA
-            pAxes[1].nNumber = nZIndex
-            pAxes[1].nType = IDA_AxisType.IDA_AT_Z
-            pnAxisCount = 2
-        elif nSize[0] != 0 and nSize[1] == 0 and nSize[2] != 0:
-            pAxes[0].nNumber = nLIndex
-            pAxes[0].nType = IDA_AxisType.IDA_AT_LAMBDA
-            pAxes[1].nNumber = nTIndex
-            pAxes[1].nType = IDA_AxisType.IDA_AT_TIME
-            pnAxisCount = 2
-        elif nSize[0] == 0 and nSize[1] != 0 and nSize[2] != 0:
-            pAxes[0].nNumber = nZIndex
-            pAxes[0].nType = IDA_AxisType.IDA_AT_Z
-            pAxes[1].nNumber = nTIndex
-            pAxes[1].nType = IDA_AxisType.IDA_AT_TIME
-            pnAxisCount = 2
-        elif nSize[0] != 0 and nSize[1] == 0 and nSize[2] == 0:
-            pAxes[0].nNumber = nLIndex
-            pAxes[0].nType = IDA_AxisType.IDA_AT_LAMBDA
-            pnAxisCount = 1
-        elif nSize[0] == 0 and nSize[1] != 0 and nSize[2] == 0:
-            pAxes[0].nNumber = nZIndex
-            pAxes[0].nType = IDA_AxisType.IDA_AT_Z
-            pnAxisCount = 1
-        elif nSize[0] == 0 and nSize[1] == 0 and nSize[2] != 0:
-            pAxes[0].nNumber = nTIndex
-            pAxes[0].nType = IDA_AxisType.IDA_AT_TIME
-            pnAxisCount = 1
-        elif nSize[0] == 0 and nSize[1] == 0 and nSize[2] == 0:
-            pAxes[0].nNumber = nTIndex
-            pAxes[0].nType = IDA_AxisType.IDA_AT_TIME
-            pnAxisCount = 1
-    del pAxis
-    return pnAxisCount
 
 
 if __name__ == "__main__":

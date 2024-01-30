@@ -1,5 +1,9 @@
-import lib
+"""Olympus IDA wrapper module
 
+* Porting of IDA_Sample/PixelLength.h,cpp
+
+"""
+import lib
 
 
 class PixelLength:

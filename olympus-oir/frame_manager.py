@@ -1,12 +1,13 @@
+"""Olympus IDA wrapper module
+
+* Porting of IDA_Sample/FrameManager.h,cpp
+
+"""
 import ctypes as ct
 
-import lib
 import h_ida
-
-from axis_info import (
-    AxisIndex,
-    AxisPosition,
-)
+import lib
+from axis_info import AxisIndex, AxisPosition
 from roi_collection import Roi
 
 
@@ -30,12 +31,7 @@ class FrameManager:
         self.m_vecAxisPosition = []
         self.m_vecRois = []
         lib.ida.GetImage(
-            hAccessor,
-            hArea,
-            pszChannelId,
-            pAxes,
-            nNumOfAxes,
-            ct.byref(self.m_hImage),
+            hAccessor, hArea, pszChannelId, pAxes, nNumOfAxes, ct.byref(self.m_hImage)
         )
 
     def get_image_body(self, rect):
@@ -53,11 +49,11 @@ class FrameManager:
             )
 
     def write_image_body(self, filename):
-        # TODO: Do something here
+        # Note: Not impletented.
         pass
 
     def write_image_body_binary(self, filename):
-        # TODO: Do something here
+        # Note: Not impletented.
         pass
 
     def get_pixel_value_tm(self, myDataCnt):
@@ -77,7 +73,6 @@ class FrameManager:
         for p in pFrameAxes:
             axis_index = AxisIndex()
             axis_index.set_exit(True)
-            # TODO: Is the following code correct? (p.nType, p.nNumber)
             axis_index.set_type(p.nType)
             axis_index.set_index(p.nNumber)
             self.m_vecAxisIndex.append(axis_index)
@@ -92,11 +87,7 @@ class FrameManager:
 
     def get_frame_position(self):
         result, hProp = lib.get_frame_property(
-            self.m_hAccessor,
-            self.m_hImage,
-            "AxisPosition",
-            "axisName",
-            "TIMELAPSE",
+            self.m_hAccessor, self.m_hImage, "AxisPosition", "axisName", "TIMELAPSE"
         )
         if result == 0:
             result, pAxisPosition = lib.get_property_value(
@@ -112,11 +103,7 @@ class FrameManager:
             lib.ida.ReleaseProperty(self.m_hAccessor, hProp)
 
         result, hProp = lib.get_frame_property(
-            self.m_hAccessor,
-            self.m_hImage,
-            "AxisPosition",
-            "axisName",
-            "ZSTACK",
+            self.m_hAccessor, self.m_hImage, "AxisPosition", "axisName", "ZSTACK"
         )
         if result == 0:
             result, pAxisPosition = lib.get_property_value(
@@ -132,11 +119,7 @@ class FrameManager:
             lib.ida.ReleaseProperty(self.m_hAccessor, hProp)
 
         result, hProp = lib.get_frame_property(
-            self.m_hAccessor,
-            self.m_hImage,
-            "AxisPosition",
-            "axisName",
-            "LAMBDA",
+            self.m_hAccessor, self.m_hImage, "AxisPosition", "axisName", "LAMBDA"
         )
         if result == 0:
             result, pAxisPosition = lib.get_property_value(
@@ -179,11 +162,7 @@ class FrameManager:
         result, hProp = lib.get_frame_property(
             self.m_hAccessor, self.m_hImage, "StimulationROIList"
         )
-        result, pAnalysisROIDs = lib.get_property_value(
-            self.m_hAccessor,
-            hProp,
-            "id",
-        )
+        result, pAnalysisROIDs = lib.get_property_value(self.m_hAccessor, hProp, "id")
         for aroi in pAnalysisROIDs:
             roi = Roi()
             # Get Image ROI Info from ID

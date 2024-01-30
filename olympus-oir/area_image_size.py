@@ -1,5 +1,9 @@
-import lib
+"""Olympus IDA wrapper module
 
+* Porting of IDA_Sample/AreaImageSize.h,cpp
+
+"""
+import lib
 
 
 class AreaImageSize:
