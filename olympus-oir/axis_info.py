@@ -1,11 +1,12 @@
-from ctypes import *
+"""Olympus IDA wrapper module
 
+* Porting of IDA_Sample/AxisInfo.h,cpp
 
-import lib
+"""
+import ctypes as ct
+
 import h_ida
-
-
-ida = lib.ida
+import lib
 
 
 class AxisIndex:
@@ -99,8 +100,16 @@ class AxisInfo:
 
         for c_axis in pAxes:
             axis = Axis()
-            result, hPropAxis = lib.get_area_property(hAccessor, hArea, "AxisInfo", ["axisName", cast(c_wchar_p(c_axis.value.pszString), c_void_p)])
-            if result == 0:
+            result, hPropAxis = lib.get_area_property(
+                hAccessor,
+                hArea,
+                "AxisInfo",
+                [
+                    "axisName",
+                    ct.cast(ct.c_wchar_p(c_axis.value.pszString), ct.c_void_p),
+                ],
+            )
+            if result == h_ida.IDA_Result.IDA_RESULT_SUCCESS:
                 result, pStart = lib.get_property_value(hAccessor, hPropAxis, "start")
                 axis.set_start(pStart[0].value.dDouble)
                 del pStart
@@ -118,24 +127,35 @@ class AxisInfo:
                 del pMax
                 self.m_axes[c_axis.value.pszString] = axis
                 if hPropAxis:
-                    ida.ReleaseProperty(hAccessor, hPropAxis)
+                    lib.ida.ReleaseProperty(hAccessor, hPropAxis)
         if pAxes:
             del pAxes
 
         if hPropAxes:
-            ida.ReleaseProperty(hAccessor, hPropAxes)
+            lib.ida.ReleaseProperty(hAccessor, hPropAxes)
 
     def get_axis(self, name):
         return self.m_axes.get(name, None)
 
-    def print(self):
-        print('Axis Information')
-        for name, axis in self.m_axes.items():
-            print(f'\taxisName = {name}')
-            print(f'\t\tstart = {axis.get_start()}')
-            print(f'\t\tstep = {axis.get_step()}')
-            print(f'\t\tend = {axis.get_end()}')
-            print(f'\t\tmax = {axis.get_max()}')
-
     def exist(self, name):
         return name in self.m_axes
+
+    def print(self):
+        print("Axis Information")
+        for name, axis in self.m_axes.items():
+            print(f"\taxisName = {name}")
+            print(f"\t\tstart = {axis.get_start()}")
+            print(f"\t\tstep = {axis.get_step()}")
+            print(f"\t\tend = {axis.get_end()}")
+            print(f"\t\tmax = {axis.get_max()}")
+
+    def get_values(self):
+        result = {}
+        for name, axis in self.m_axes.items():
+            result[name] = {
+                "start": axis.get_start(),
+                "step": axis.get_step(),
+                "end": axis.get_end(),
+                "max": axis.get_max(),
+            }
+        return result

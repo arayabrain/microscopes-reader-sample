@@ -1,5 +1,8 @@
-from ctypes import *
+"""Olympus IDA wrapper module
 
+* Porting of IDA_Sample/SystemInfo.h,cpp
+
+"""
 import lib
 
 
@@ -37,3 +40,27 @@ class SystemInfo:
         print(f"\tversion = {self.m_szSystemVersion}")
         print(f"\tdeviceName = {self.m_szDeviceName}")
         print(f"\tuserName = {self.m_szUserName}")
+
+    def get_values(self):
+        return {
+            "system_name": self.m_szSystemName,
+            "system_version": self.m_szSystemVersion,
+            "device_name": self.m_szDeviceName,
+            "user_name": self.m_szUserName,
+        }
+
+    @property
+    def system_name(self):
+        return self.m_szSystemName
+
+    @property
+    def system_version(self):
+        return self.m_szSystemVersion
+
+    @property
+    def device_name(self):
+        return self.m_szDeviceName
+
+    @property
+    def user_name(self):
+        return self.m_szUserName

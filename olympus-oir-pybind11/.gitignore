@@ -1,1 +1,9 @@
-!ida_sample_lib.*.so
+/libs/
+/IDA_Sample_build/
+
+!/ida_sample_lib.*.so
+
+*.out.json
+*.out.tiff
+*.out.*.json
+*.out.*.tiff

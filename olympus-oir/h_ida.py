@@ -1,5 +1,10 @@
+"""Olympus IDA wrapper module
+
+* Porting of IDA/include/Idaldll.h
+
+"""
+import ctypes as ct
 from enum import IntEnum, auto
-from ctypes import *
 
 
 class IDA_Result(IntEnum):
@@ -29,55 +34,61 @@ class IDA_OpenMode(IntEnum):
     IDA_OM_NORMAL = 0x00
     IDA_OM_FORCE = 0x02
     IDA_OM_STREAMING = 0x04
+    IDA_OM_READ_WRITE = 0x08
+    IDA_OM_APPEND = 0x10
 
 
-class CMN_RECT(Structure):
+class CMN_RECT(ct.Structure):
     _fields_ = [
-        ("x", c_uint64),
-        ("y", c_uint64),
-        ("width", c_uint64),
-        ("height", c_uint64),
-    ]
-
-class IDA_POINT(Structure):
-    _fields_ = [
-        ("x", c_int),
-        ("y", c_int),
+        ("x", ct.c_uint64),
+        ("y", ct.c_uint64),
+        ("width", ct.c_uint64),
+        ("height", ct.c_uint64),
     ]
 
 
-class IDA_VALUE_UN(Union):
+class IDA_POINT(ct.Structure):
     _fields_ = [
-        ("nInteger", c_int),
-        ("dDouble", c_double),
-        ("pszString", c_wchar_p),
+        ("x", ct.c_int),
+        ("y", ct.c_int),
+    ]
+
+
+class IDA_VALUE_UN(ct.Union):
+    _fields_ = [
+        ("nInteger", ct.c_int),
+        ("dDouble", ct.c_double),
+        ("pszString", ct.c_wchar_p),
         ("point", IDA_POINT),
         ("rRect", CMN_RECT),
     ]
 
-class IDA_VALUE(Structure):
+
+class IDA_VALUE(ct.Structure):
     _fields_ = [
-        ("nType", c_int),
+        ("nType", ct.c_int),
         ("value", IDA_VALUE_UN),
     ]
 
 
-class IDA_PARAM_ELEMENT(Structure):
+class IDA_PARAM_ELEMENT(ct.Structure):
     _fields_ = [
-        ("pszKey", c_wchar_p),
-        ("pValue", c_void_p),
+        ("pszKey", ct.c_wchar_p),
+        ("pValue", ct.c_void_p),
     ]
 
-class IDA_PARAM(Structure):
+
+class IDA_PARAM(ct.Structure):
     _fields_ = [
-        ("nSize", c_int),
-        ("pElements", POINTER(IDA_PARAM_ELEMENT)),
+        ("nSize", ct.c_int),
+        ("pElements", ct.POINTER(IDA_PARAM_ELEMENT)),
     ]
 
-class IDA_AXIS_INFO(Structure):
+
+class IDA_AXIS_INFO(ct.Structure):
     _fields_ = [
-        ("nType", c_int),
-        ("nNumber", c_int64),
+        ("nType", ct.c_int),
+        ("nNumber", ct.c_int64),
     ]
 
 

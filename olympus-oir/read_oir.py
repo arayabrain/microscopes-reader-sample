@@ -1,14 +1,14 @@
 import ctypes as ct
+import os
 import sys
 
-import os
+import lib
 import numpy as np
-
 from area_image_size import AreaImageSize
 from axis_info import AxisInfo
 from channel_info import ChannelInfo
 from frame_manager import FrameManager
-from h_ida import CMN_RECT, IDA_AXIS_INFO, IDA_AxisType, IDA_OpenMode, IDA_Result
+from h_ida import CMN_RECT, IDA_AXIS_INFO, IDA_AxisType, IDA_OpenMode
 from lib import ida
 from roi_collection import RoiCollection
 
@@ -33,8 +33,8 @@ def main(filepath):
     result = ida.Open(hAccessor, filepath, IDA_OpenMode.IDA_OM_READ, ct.byref(hFile))
 
     # GetNumberOfGroup
-    num_of_group = ct.c_int()
-    ida.GetNumOfGroups(hAccessor, hFile, ct.byref(num_of_group))
+    num_of_groups = ct.c_int()
+    ida.GetNumOfGroups(hAccessor, hFile, ct.byref(num_of_groups))
 
     # Get Group Handle
     hGroup = ct.c_void_p()
@@ -84,78 +84,62 @@ def main(filepath):
     nTLoop = nTLoop or 1
     nZLoop = nZLoop or 1
 
-    # Prepare mex matrices
-    # TODO:
-
     # Retrieve all imaged area
     rect.width = area_image_size.get_x()
     rect.height = area_image_size.get_y()
     rect.x = 0
     rect.y = 0
 
-    m_pucImageBuffer = None
-
-    # Specify channel number
-    # TODO: Finally, channel_no shall be externally specifiable.
-    channel_no = 0
-
-    # Variable for storing results (image stack)
-    result_stack = []
-
     # Retrieve Image data and TimeStamp frame-by-frame
-    for i in range(nLLoop):
-        for j in range(nZLoop):
-            for k in range(nTLoop):
-                nAxisCount = set_frame_axis_index(
-                    i, j, k, imaging_roi, axis_info, pAxes, 0
-                )
+    for channel_no in range(channel_info.get_num_of_channel()):
+        # Variable for storing results (image stack)
+        result_stack = []
 
-                # Create Frame Manager
-                frame_manager = FrameManager(
-                    hAccessor, hArea, channel_info.get_channel_id(0), pAxes, nAxisCount
-                )
-                # Get Image Body
-                m_pucImageBuffer = frame_manager.get_image_body(rect)
+        for i in range(nLLoop):
+            for j in range(nZLoop):
+                for k in range(nTLoop):
+                    nAxisCount = lib.set_frame_axis_index(
+                        i, j, k, imaging_roi, axis_info, pAxes, 0
+                    )
 
-                # NOTE: Since there are concerns about the efficiency of this process
-                #       (acquiring pixel data one dot at a time), 
-                #       another process (using ndarray) is used.
-                # # Store Image Data Pixel by Pixel
-                # frame_manager.pucBuffer_to_WORD_TM()
-                # for nDataCnt in range(rect.width * rect.height):
-                #     result = frame_manager.get_pixel_value_tm(nDataCnt)
-                #     result += 1
+                    # Create Frame Manager
+                    frame_manager = FrameManager(
+                        hAccessor,
+                        hArea,
+                        channel_info.get_channel_id(channel_no),
+                        pAxes,
+                        nAxisCount,
+                    )
 
-                # Obtain image data in ndarray format
-                pucBuffer_to_WORD_TM = frame_manager.pucBuffer_to_WORD_TM(
-                    area_image_size.get_x(),
-                    area_image_size.get_y(),
-                )
-                pucBuffer_ndarray = np.ctypeslib.as_array(pucBuffer_to_WORD_TM)
-                result_stack.append(pucBuffer_ndarray)
+                    # Get Image Body
+                    buffer_pointer = frame_manager.get_image_body(rect)
+                    ctypes_buffer_ptr = buffer_pointer[1]
 
-                frame_manager.release_image_body()
+                    # Obtain image data in ndarray format
+                    pucBuffer_ndarray = np.ctypeslib.as_array(ctypes_buffer_ptr)
+                    result_stack.append(pucBuffer_ndarray)
 
-                frame_manager.get_frame_position()
-                frame_manager.write_frame_position()
+                    frame_manager.release_image_body()
 
-    # ====================
-    # Output
-    # ====================
+                    frame_manager.get_frame_position()
+                    frame_manager.write_frame_position()
 
-    # Save image stack (tiff format)
-    from PIL import Image
-    save_stack = [Image.fromarray(frame) for frame in result_stack]
-    save_path = (
-        os.path.basename(filepath) + f".out.ch{channel_no}.tiff"
-    )
-    print(f"save image: {save_path}")
-    save_stack[0].save(
-        save_path,
-        compression="tiff_deflate",
-        save_all=True,
-        append_images=save_stack[1:],
-    )
+        # ====================
+        # Output
+        # ====================
+
+        # Save image stack (tiff format)
+        from PIL import Image
+
+        save_stack = [Image.fromarray(frame) for frame in result_stack]
+        save_path = os.path.basename(filepath) + f".out.ch{channel_no}.tiff"
+        print(f"save image: {save_path}")
+        save_stack[0].save(
+            save_path,
+            compression="tiff_deflate",
+            save_all=True,
+            append_images=save_stack[1:],
+        )
 
     # ====================
     # Cleaning
@@ -173,108 +157,10 @@ def main(filepath):
     ida.Disconnect(hAccessor)
 
     # ReleaseAccessor
-    ida.ReleaseAccessor(hAccessor)
+    ida.ReleaseAccessor(ct.byref(hAccessor))
 
     # Terminate
     ida.Terminate()
-
-
-def set_frame_axis_index(
-    nLIndex, nZIndex, nTIndex, pRoiCollection, pAxisInfo, pAxes, pnAxisCount
-):
-    # 0: LAxis
-    # 1: ZAxis
-    # 2: TAxis
-    KEY = ["LAMBDA", "ZSTACK", "TIMELAPSE"]
-    nSize = [0] * 3
-    bHasAxis = [pAxisInfo.exist(key) for key in KEY]
-    pAxis = [pAxisInfo.get_axis(key) for key in KEY]
-    pnAxisCount = 0
-    for i in range(3):
-        if bHasAxis[i]:
-            nSize[i] = pAxis[i].get_max()
-    if pRoiCollection.has_point_roi():
-        pAxes[0].nNumber = nTIndex
-        pAxes[0].nType = IDA_AxisType.IDA_AT_TIME
-        pnAxisCount = 1
-    elif pRoiCollection.has_multi_point_roi():
-        pAxes[0].nNumber = nTIndex
-        pAxes[0].nType = IDA_AxisType.IDA_AT_TIME
-        pnAxisCount = 1
-    elif pRoiCollection.has_mapping_roi():
-        if bHasAxis[1] == False:
-            pAxes[0].nNumber = nTIndex
-            pAxes[0].nType = IDA_AxisType.IDA_AT_TIME
-            pnAxisCount = 1
-        else:
-            pAxes[0].nNumber = nZIndex
-            pAxes[0].nType = IDA_AxisType.IDA_AT_Z
-            pAxes[1].nNumber = nTIndex
-            pAxes[1].nType = IDA_AxisType.IDA_AT_TIME
-            pnAxisCount = 2
-    elif pRoiCollection.has_line_roi():
-        if bHasAxis[0] == False and bHasAxis[1] == False and bHasAxis[2] == True:
-            pAxes[0].nNumber = nTIndex
-            pAxes[0].nType = IDA_AxisType.IDA_AT_TIME
-            pnAxisCount = 1
-        elif bHasAxis[0] == False and bHasAxis[1] == True and bHasAxis[2] == False:
-            pAxes[0].nNumber = nZIndex
-            pAxes[0].nType = IDA_AxisType.IDA_AT_Z
-            pnAxisCount = 1
-        elif bHasAxis[0] == False and bHasAxis[1] == True and bHasAxis[2] == True:
-            pAxes[0].nNumber = nZIndex
-            pAxes[0].nType = IDA_AxisType.IDA_AT_Z
-            pAxes[1].nNumber = nTIndex
-            pAxes[1].nType = IDA_AxisType.IDA_AT_TIME
-            pnAxisCount = 2
-        else:
-            # TODO: What?
-            pass
-    else:
-        if nSize[0] != 0 and nSize[1] != 0 and nSzie[2] != 0:
-            pAxes[0].nNumber = nLIndex
-            pAxes[0].nType = IDA_AxisType.IDA_AT_LAMBDA
-            pAxes[1].nNumber = nZIndex
-            pAxes[1].nType = IDA_AxisType.IDA_AT_Z
-            pAxes[2].nNumber = nTIndex
-            pAxes[2].nType = IDA_AxisType.IDA_AT_TIME
-            pnAxisCount = 3
-        elif nSize[0] != 0 and nSize[1] != 0 and nSize[2] == 0:
-            pAxes[0].nNumber = nLIndex
-            pAxes[0].nType = IDA_AxisType.IDA_AT_LAMBDA
-            pAxes[1].nNumber = nZIndex
-            pAxes[1].nType = IDA_AxisType.IDA_AT_Z
-            pnAxisCount = 2
-        elif nSize[0] != 0 and nSize[1] == 0 and nSize[2] != 0:
-            pAxes[0].nNumber = nLIndex
-            pAxes[0].nType = IDA_AxisType.IDA_AT_LAMBDA
-            pAxes[1].nNumber = nTIndex
-            pAxes[1].nType = IDA_AxisType.IDA_AT_TIME
-            pnAxisCount = 2
-        elif nSize[0] == 0 and nSize[1] != 0 and nSize[2] != 0:
-            pAxes[0].nNumber = nZIndex
-            pAxes[0].nType = IDA_AxisType.IDA_AT_Z
-            pAxes[1].nNumber = nTIndex
-            pAxes[1].nType = IDA_AxisType.IDA_AT_TIME
-            pnAxisCount = 2
-        elif nSize[0] != 0 and nSize[1] == 0 and nSize[2] == 0:
-            pAxes[0].nNumber = nLIndex
-            pAxes[0].nType = IDA_AxisType.IDA_AT_LAMBDA
-            pnAxisCount = 1
-        elif nSize[0] == 0 and nSize[1] != 0 and nSize[2] == 0:
-            pAxes[0].nNumber = nZIndex
-            pAxes[0].nType = IDA_AxisType.IDA_AT_Z
-            pnAxisCount = 1
-        elif nSize[0] == 0 and nSize[1] == 0 and nSize[2] != 0:
-            pAxes[0].nNumber = nTIndex
-            pAxes[0].nType = IDA_AxisType.IDA_AT_TIME
-            pnAxisCount = 1
-        elif nSize[0] == 0 and nSize[1] == 0 and nSize[2] == 0:
-            pAxes[0].nNumber = nTIndex
-            pAxes[0].nType = IDA_AxisType.IDA_AT_TIME
-            pnAxisCount = 1
-    del pAxis
-    return pnAxisCount
 
 
 if __name__ == "__main__":

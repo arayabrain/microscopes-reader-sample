@@ -1,5 +1,8 @@
-from ctypes import *
+"""Olympus IDA wrapper module
 
+* Porting of IDA_Sample/FileCreationTime.h,cpp
+
+"""
 import lib
 
 
@@ -20,7 +23,11 @@ class FileCreationTime:
         print("File Creation Time")
         print(f"\tTime={self.m_szCreationTime}")
 
-    def get_file_creation_time_tm(self, hAccessor, hArea):
-        result, hProp = lib.get_area_property(hAccessor, hArea, "CreationDateTime")
-        result, pCreationDateTime = lib.get_property_value(hAccessor, hProp, "dateTime")
-        return pCreationDateTime[0].value.pszString
+    def get_values(self):
+        return {
+            "creation_time": self.m_szCreationTime,
+        }
+
+    @property
+    def creation_time(self):
+        return self.m_szCreationTime

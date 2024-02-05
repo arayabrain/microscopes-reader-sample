@@ -1,10 +1,9 @@
-from ctypes import *
+"""Olympus IDA wrapper module
 
+* Porting of IDA_Sample/AreaImageSize.h,cpp
+
+"""
 import lib
-import h_ida
-
-
-ida = lib.ida
 
 
 class AreaImageSize:
@@ -16,7 +15,7 @@ class AreaImageSize:
         if pImageSize:
             del pImageSize
         if hProp:
-            ida.ReleaseProperty(hAccessor, hProp)
+            lib.ida.ReleaseProperty(hAccessor, hProp)
 
     def get_x(self):
         return self.m_nX
@@ -25,6 +24,12 @@ class AreaImageSize:
         return self.m_nY
 
     def print(self):
-        print('Image Size')
-        print(f'\tx={self.m_nX}')
-        print(f'\ty={self.m_nY}')
+        print("Image Size")
+        print(f"\tx={self.m_nX}")
+        print(f"\ty={self.m_nY}")
+
+    def get_values(self):
+        return {
+            "x": self.m_nX,
+            "y": self.m_nY,
+        }

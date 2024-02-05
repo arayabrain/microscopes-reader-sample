@@ -7,7 +7,7 @@ from area_image_size import AreaImageSize
 from axis_info import AxisInfo
 from channel_info import ChannelInfo
 from file_creation_time import FileCreationTime
-from h_ida import CMN_RECT, IDA_OpenMode, IDA_Result
+from h_ida import CMN_RECT, IDA_OpenMode
 from lib import ida
 from objective_lens_info import ObjectiveLensInfo
 from pixel_length import PixelLength
@@ -35,8 +35,8 @@ def main(filepath):
     result = ida.Open(hAccessor, filepath, IDA_OpenMode.IDA_OM_READ, ct.byref(hFile))
 
     # GetNumberOfGroup
-    num_of_group = ct.c_int()
-    ida.GetNumOfGroups(hAccessor, hFile, ct.byref(num_of_group))
+    num_of_groups = ct.c_int()
+    ida.GetNumOfGroups(hAccessor, hFile, ct.byref(num_of_groups))
 
     # Get Group Handle
     hGroup = ct.c_void_p()
@@ -44,8 +44,8 @@ def main(filepath):
     ida.GetGroup(hAccessor, hFile, specify_group, ct.byref(hGroup))
 
     # GetNumberOfLevels
-    num_of_layer = ct.c_int()
-    ida.GetNumOfLevels(hAccessor, hGroup, ct.byref(num_of_layer))
+    num_of_levels = ct.c_int()
+    ida.GetNumOfLevels(hAccessor, hGroup, ct.byref(num_of_levels))
 
     # GetLevelImageSize
     rect = CMN_RECT()
@@ -138,26 +138,26 @@ def main(filepath):
         "TInterval": Tstep,
         "ZStart": Zstart,
         "ZEnd": Zend,
-        "ObjectiveName": objective_lens_info.get_name_tm(hAccessor, hArea),
-        "ObjectiveMag": objective_lens_info.get_magnification_tm(),
-        "ObjectiveNA": objective_lens_info.get_na_tm(),
-        "ReflectiveIndex": objective_lens_info.get_reflective_index_tm(),
-        "Immersion": objective_lens_info.get_immersion_tm(hAccessor, hArea),
-        "Date": file_creation_time.get_file_creation_time_tm(hAccessor, hArea),
-        "NumberOfGroup": num_of_group.value,
-        "NumberOfLevel": num_of_layer.value,
+        "ObjectiveName": objective_lens_info.name,
+        "ObjectiveMag": objective_lens_info.magnification,
+        "ObjectiveNA": objective_lens_info.na,
+        "ReflectiveIndex": objective_lens_info.reflective_index,
+        "Immersion": objective_lens_info.immersion,
+        "Date": file_creation_time.creation_time,
+        "NumberOfGroup": num_of_groups.value,
+        "NumberOfLevel": num_of_levels.value,
         "NumberOfArea": num_of_area.value,
-        "ByteDepthCh0": channel_info.get_depth_of_ch0_tm(),
-        "SystemName": system_info.m_szSystemName,
-        "SystemVersion": system_info.m_szSystemVersion,
-        "DeviceName": system_info.m_szDeviceName,
-        "UserName": system_info.m_szUserName,
-        "CommentByUser": user_comment.m_szComment,
+        "ByteDepthCh0": channel_info.depth_of_ch0,
+        "SystemName": system_info.system_name,
+        "SystemVersion": system_info.system_version,
+        "DeviceName": system_info.device_name,
+        "UserName": system_info.user_name,
+        "CommentByUser": user_comment.comment,
     }
 
     print("------------ result_data:")
     print(json.dumps(result_data, indent=2))
-    save_path = os.path.basename(filepath) + f".out.metadata.json"
+    save_path = os.path.basename(filepath) + ".out.metadata.json"
     with open(save_path, "w") as f:
         json.dump(result_data, f, indent=2)
 
@@ -177,7 +177,7 @@ def main(filepath):
     ida.Disconnect(hAccessor)
 
     # ReleaseAccessor
-    ida.ReleaseAccessor(hAccessor)
+    ida.ReleaseAccessor(ct.byref(hAccessor))
 
     # Terminate
     ida.Terminate()

@@ -1,9 +1,9 @@
-from ctypes import *
+"""Olympus IDA wrapper module
 
+* Porting of IDA_Sample/PixelLength.h,cpp
+
+"""
 import lib
-
-
-ida = lib.ida
 
 
 class PixelLength:
@@ -22,12 +22,18 @@ class PixelLength:
         del pPixelLength
 
         if hProp:
-            ida.ReleaseProperty(hAccessor, hProp)
+            lib.ida.ReleaseProperty(hAccessor, hProp)
 
     def print(self):
-        print('Pixel length[um]')
-        print(f'\tx = {self.m_dX}')
-        print(f'\ty = {self.m_dY}')
+        print("Pixel length[um]")
+        print(f"\tx = {self.m_dX}")
+        print(f"\ty = {self.m_dY}")
+
+    def get_values(self):
+        return {
+            "x": self.m_dX,
+            "y": self.m_dY,
+        }
 
     def get_pixel_length_x(self):
         return self.m_dX
