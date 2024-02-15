@@ -1,0 +1,194 @@
+From f4ac528b304ccb2e161c1c7fe588b439779ebbb7 Mon Sep 17 00:00:00 2001
+From: tuanna26 <tuanna@reactplus.com>
+Date: Mon, 29 Jan 2024 13:38:55 +0700
+Subject: [PATCH 1/2] Fix raw array to vector
+
+---
+ Library/IDA_Sample/IDA_Sample/FrameManager.cpp | 2 +-
+ Library/IDA_Sample/IDA_Sample/FrameManager.h   | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/Library/IDA_Sample/IDA_Sample/FrameManager.cpp b/Library/IDA_Sample/IDA_Sample/FrameManager.cpp
+index 0debd49..eab0898 100644
+--- a/Library/IDA_Sample/IDA_Sample/FrameManager.cpp
++++ b/Library/IDA_Sample/IDA_Sample/FrameManager.cpp
+@@ -17,7 +17,7 @@
+ 
+ extern int SaveTiff( unsigned char* pwData, int width, int height, int bitCount, wchar_t* pFilePathAneName );
+ 
+-CFrameManager::CFrameManager(IDA_HACCESSOR hAccessor, IDA_HAREA hArea,const wchar_t *pszChannelId, IDA_AXIS_INFO *pAxes, int nNumOfAxes )
++CFrameManager::CFrameManager(IDA_HACCESSOR hAccessor, IDA_HAREA hArea,const wchar_t *pszChannelId, std::vector<IDA_AXIS_INFO> &pAxes, int nNumOfAxes )
+ {
+ 	IDA_Result Result;
+ 	m_hAccessor = hAccessor;
+diff --git a/Library/IDA_Sample/IDA_Sample/FrameManager.h b/Library/IDA_Sample/IDA_Sample/FrameManager.h
+index 7a2d52f..a4cf8a7 100644
+--- a/Library/IDA_Sample/IDA_Sample/FrameManager.h
++++ b/Library/IDA_Sample/IDA_Sample/FrameManager.h
+@@ -80,7 +80,7 @@ private:
+ 
+ 
+ public:
+-	CFrameManager(IDA_HACCESSOR hAccessor, IDA_HAREA hArea,const wchar_t *pszChannelId, IDA_AXIS_INFO *pAxes, int nNumOfAxes );
++	CFrameManager(IDA_HACCESSOR hAccessor, IDA_HAREA hArea,const wchar_t *pszChannelId, std::vector<IDA_AXIS_INFO> &pAxes, int nNumOfAxes );
+ 	~CFrameManager(void);
+ 	unsigned char* GetImageBody( CMN_RECT Rect);
+ 	void ReleaseImageBody();
+-- 
+2.43.0
+
+
+From 086a4579f288c5f92093e0121cc9e90d98a00734 Mon Sep 17 00:00:00 2001
+From: tuanna26 <tuanna@reactplus.com>
+Date: Tue, 30 Jan 2024 13:57:33 +0700
+Subject: [PATCH 2/2] Fix FrameManager buffer
+
+---
+ .../IDA_Sample/IDA_Sample/FrameManager.cpp    | 40 +++++++++++--------
+ Library/IDA_Sample/IDA_Sample/FrameManager.h  |  6 ++-
+ 2 files changed, 27 insertions(+), 19 deletions(-)
+
+diff --git a/Library/IDA_Sample/IDA_Sample/FrameManager.cpp b/Library/IDA_Sample/IDA_Sample/FrameManager.cpp
+index eab0898..46c217a 100644
+--- a/Library/IDA_Sample/IDA_Sample/FrameManager.cpp
++++ b/Library/IDA_Sample/IDA_Sample/FrameManager.cpp
+@@ -22,7 +22,6 @@ CFrameManager::CFrameManager(IDA_HACCESSOR hAccessor, IDA_HAREA hArea,const wcha
+ 	IDA_Result Result;
+ 	m_hAccessor = hAccessor;
+ 	m_hArea = hArea;
+-	m_pucImageBuffer = NULL;
+ 	wcscpy( m_pszChannelId, pszChannelId );
+ 	m_nAxisCount = nNumOfAxes;
+ 	m_pAxes = new IDA_AXIS_INFO[m_nAxisCount];
+@@ -75,16 +74,12 @@ CFrameManager::~CFrameManager(void)
+ 	{
+ 		delete [] m_pAxes;
+ 	}
+-	if( m_pucImageBuffer != NULL )
+-	{
+-		delete [] m_pucImageBuffer;
+-	}
+ 	if( m_hImage )
+ 	{
+ 		::ReleaseImage( m_hAccessor, m_hImage );
+ 	}
+ }
+-unsigned char* CFrameManager::GetImageBody(CMN_RECT Rect)
++std::vector<unsigned char> CFrameManager::GetImageBody(CMN_RECT Rect)
+ {
+ 	IDA_Result Result;
+ 	UINT64 unImageSize = 0;
+@@ -101,13 +96,15 @@ unsigned char* CFrameManager::GetImageBody(CMN_RECT Rect)
+ 	if( 0!= unImageSize )
+ 	{
+ 		try{
+-			m_pucImageBuffer = new BYTE [unImageSize];
++			// m_pucImageBuffer = new BYTE [unImageSize];
++			m_pucImageBuffer.empty();
++			m_pucImageBuffer.resize(unImageSize);
+ 		}
+ 		catch(std::bad_alloc e){
+ 			printf("exception %s\n",e.what());
+-			return NULL;
++			return std::vector<unsigned char>();
+ 		}
+-		Result = ::GetImageBody( m_hAccessor, m_hImage, &m_rect,m_pucImageBuffer, unImageSize, &unImageSize );
++		Result = ::GetImageBody( m_hAccessor, m_hImage, &m_rect,m_pucImageBuffer.data(), unImageSize, &unImageSize );
+ 		//Result = ::GetImageBodyCompressed( m_hAccessor, m_hImage, &m_rect,m_pucImageBuffer, unImageSize, &unImageSize );
+ 	}
+ 	return m_pucImageBuffer;
+@@ -120,11 +117,15 @@ UINT64 CFrameManager::getBufferSize()
+ 
+ void CFrameManager::ReleaseImageBody()
+ {
++	/*
+ 	if(m_pucImageBuffer)
+ 	{
+-		delete [] m_pucImageBuffer;
+-		m_pucImageBuffer = NULL;
++		// delete [] m_pucImageBuffer;
++		// m_pucImageBuffer = NULL;
++		// m_pucImageBuffer.clear()
+ 	}
++	*/
++	m_pucImageBuffer.clear();
+ }
+ void CFrameManager::WriteImageBody( wchar_t* pFilePathAndName )
+ {
+@@ -136,9 +137,9 @@ void CFrameManager::WriteImageBody( wchar_t* pFilePathAndName )
+ 	string s = Utf16ToUtf8((const wchar_t*)pFilePathAndName);
+ 	fp = fopen(s.c_str(),"w");
+ #endif
+-	if( fp != NULL && m_pucImageBuffer != NULL)
++	if( fp != NULL && m_pucImageBuffer.size() > 0)
+ 	{
+-		WORD* pwData = (WORD*)m_pucImageBuffer;
++		WORD* pwData = (WORD*)m_pucImageBuffer.data();
+ 		for( nDataCnt = 0; nDataCnt < m_rect.width*m_rect.height; nDataCnt=nDataCnt+1 )
+ 		{
+ 			fprintf(fp,"%d\n", pwData[nDataCnt]);
+@@ -161,9 +162,9 @@ void CFrameManager::WriteImageBodyBinary( wchar_t* pFilePathAndName )
+ 	string s = Utf16ToUtf8(pFilePathAndName);
+ 	fp = fopen(s.c_str(),"wb");
+ #endif
+-	if( fp != NULL && m_pucImageBuffer != NULL)
++	if( fp != NULL && m_pucImageBuffer.size() > 0)
+ 	{
+-		BYTE* pwData = (BYTE*)m_pucImageBuffer;
++		BYTE* pwData = (BYTE*)m_pucImageBuffer.data();
+ 		size_t ret = fwrite(pwData, sizeof(BYTE),m_unImageBufferSize, fp );
+ 	}
+ 	if( fp != NULL )
+@@ -174,9 +175,9 @@ void CFrameManager::WriteImageBodyBinary( wchar_t* pFilePathAndName )
+ 
+ void CFrameManager::WriteImageBodyTiff( wchar_t* pFilePathAneName, int width, int height, int bitCount )
+ {
+-	if( m_pucImageBuffer != NULL)
++	if( m_pucImageBuffer.size() > 0 )
+ 	{
+-		SaveTiff( m_pucImageBuffer, width, height, bitCount, pFilePathAneName );
++		SaveTiff( m_pucImageBuffer.data(), width, height, bitCount, pFilePathAneName );
+ 	}
+ }
+ 
+@@ -496,3 +497,8 @@ void CFrameManager::ResizeImageBody(unsigned char* pucDstImageBuffer, unsigned i
+ 		pucDstImageBuffer[i] = m_pucImageBuffer[i + nSkipVal - 1];
+ 	}
+ }
++
++uint16_t* CFrameManager::pucBuffer_to_WORD_TM(int width, int height)
++{
++	return (uint16_t*)m_pucImageBuffer.data();
++}
+diff --git a/Library/IDA_Sample/IDA_Sample/FrameManager.h b/Library/IDA_Sample/IDA_Sample/FrameManager.h
+index a4cf8a7..81c36a5 100644
+--- a/Library/IDA_Sample/IDA_Sample/FrameManager.h
++++ b/Library/IDA_Sample/IDA_Sample/FrameManager.h
+@@ -65,7 +65,8 @@ public:
+ class CFrameManager
+ {
+ private:
+-	unsigned char* m_pucImageBuffer;
++	// unsigned char* m_pucImageBuffer;
++	std::vector<unsigned char> m_pucImageBuffer;
+ 	unsigned int   m_unImageBufferSize;
+ 	std::vector<CAxisIndex> m_vecAxisIndex;
+ 	std::vector<CAxisPosition> m_vecAxisPosition;
+@@ -82,7 +83,7 @@ private:
+ public:
+ 	CFrameManager(IDA_HACCESSOR hAccessor, IDA_HAREA hArea,const wchar_t *pszChannelId, std::vector<IDA_AXIS_INFO> &pAxes, int nNumOfAxes );
+ 	~CFrameManager(void);
+-	unsigned char* GetImageBody( CMN_RECT Rect);
++	std::vector<unsigned char> GetImageBody( CMN_RECT Rect);
+ 	void ReleaseImageBody();
+ 	void WriteImageBody( wchar_t* pFilePathAneName );
+ 	void WriteImageBodyBinary( wchar_t* pFilePathAneName );
+@@ -96,4 +97,5 @@ public:
+ 	bool HasNoImage();
+ 	void ResizeImageBody(unsigned char* m_pucDstImageBuffer, unsigned int unSize, int nBitCount);
+ 	UINT64 getBufferSize();
++	uint16_t* pucBuffer_to_WORD_TM(int width, int height);
+ };
+-- 
+2.43.0
+
