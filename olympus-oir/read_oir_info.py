@@ -11,6 +11,7 @@ from h_ida import CMN_RECT, IDA_OpenMode
 from lib import ida
 from objective_lens_info import ObjectiveLensInfo
 from pixel_length import PixelLength
+from scanner_settings import ScannerSettings
 from system_info import SystemInfo
 from user_comment import UserComment
 
@@ -85,6 +86,10 @@ def main(filepath):
     # Objective Lens Info
     objective_lens_info = ObjectiveLensInfo(hAccessor, hArea)
     objective_lens_info.print()
+
+    # Scanner Settings
+    scanner_settings = ScannerSettings(hAccessor, hArea)
+    scanner_settings.print()
 
     # File Creation Time
     file_creation_time = FileCreationTime(hAccessor, hArea)
