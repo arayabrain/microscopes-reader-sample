@@ -5,7 +5,7 @@
 """
 import ctypes as ct
 
-from studio.app.optinist.microscopes.modules.olympus.h_ida import (
+from h_ida import (
     IDA_AXIS_INFO,
     IDA_PARAM,
     IDA_PARAM_ELEMENT,
